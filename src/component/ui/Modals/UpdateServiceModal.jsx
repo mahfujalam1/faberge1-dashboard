@@ -1,22 +1,25 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Modal } from "antd";
+import { useUpdateServiceMutation } from "../../../redux/features/service/service";
+import { toast } from "sonner";
 
-const UpdateServiceModal = ({ isOpen, service, onClose, onSave }) => {
+const UpdateServiceModal = ({ isOpen, service, onClose }) => {
   const [formData, setFormData] = useState({
-    id: "",
-    name: "",
+    serviceName: "",
     price: "",
-    subServices: [],
+    subcategory: [],
   });
+
+  const [updateService] = useUpdateServiceMutation();
+  const serviceId = service?._id;
 
   // 🔹 When service data comes in, load it into form
   useEffect(() => {
     if (service) {
       setFormData({
-        id: service.id || "",
-        name: service.name || "",
-        price: service.price || "",
-        subServices: service.subServices ? [...service.subServices] : [],
+        serviceName: service.serviceName || "",
+        price: service.price || 0,
+        subcategory: service.subcategory ? [...service.subcategory] : [],
       });
     }
   }, [service]);
@@ -27,44 +30,65 @@ const UpdateServiceModal = ({ isOpen, service, onClose, onSave }) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // 🔹 Handle sub-service input
+  // 🔹 Handle sub-service input - FIXED VERSION
   const handleSubChange = (index, e) => {
     const { name, value } = e.target;
-    const updated = [...formData.subServices];
-    updated[index][name] = value;
-    setFormData((prev) => ({ ...prev, subServices: updated }));
+
+    setFormData((prev) => {
+      const updatedSubcategories = [...prev.subcategory];
+
+      // Update the specific field at the given index
+      updatedSubcategories[index] = {
+        ...updatedSubcategories[index],
+        [name]: name === "subcategoryPrice" ? parseFloat(value) || 0 : value,
+      };
+
+      return { ...prev, subcategory: updatedSubcategories };
+    });
   };
 
   // 🔹 Add a new sub-service
   const handleAddSub = () => {
     setFormData((prev) => ({
       ...prev,
-      subServices: [...prev.subServices, { name: "", price: "" }],
+      subcategory: [
+        ...prev.subcategory,
+        { subcategoryName: "", subcategoryPrice: 0 },
+      ],
     }));
   };
 
   // 🔹 Remove sub-service
   const handleRemoveSub = (index) => {
-    const updated = [...formData.subServices];
-    updated.splice(index, 1);
-    setFormData((prev) => ({ ...prev, subServices: updated }));
+    setFormData((prev) => ({
+      ...prev,
+      subcategory: prev.subcategory.filter((_, i) => i !== index),
+    }));
   };
 
   // 🔹 Save updated data
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const updatedData = {
-      id: formData.id,
-      name: formData.name.trim(),
-      price: Number(formData.price),
-      subServices: formData.subServices.filter(
-        (sub) => sub.name.trim() !== "" && sub.price !== ""
-      ),
-    };
-
-    onSave(updatedData);
-    onClose();
+    try {
+      const updatedData = {
+        serviceName: formData.serviceName.trim(),
+        price: parseFloat(formData.price),
+        subcategory: formData.subcategory.filter(
+          (sub) =>
+            sub.subcategoryName.trim() !== "" &&
+            !isNaN(sub.subcategoryPrice) &&
+            sub.subcategoryPrice !== null
+        ),
+      };
+      const res = await updateService({ id: serviceId, data: updatedData });
+      console.log(res);
+      onClose();
+      toast.success(res?.data?.message);
+    } catch (err) {
+      console.log(err);
+      toast.error("Failed to update service.");
+    }
   };
 
   return (
@@ -89,8 +113,8 @@ const UpdateServiceModal = ({ isOpen, service, onClose, onSave }) => {
           </label>
           <input
             type="text"
-            name="name"
-            value={formData.name}
+            name="serviceName"
+            value={formData.serviceName}
             onChange={handleMainChange}
             placeholder="Enter Service Name"
             className="w-full border border-pink-100 rounded-md px-3 py-2 focus:border-[#e91e63] focus:outline-none"
@@ -116,23 +140,23 @@ const UpdateServiceModal = ({ isOpen, service, onClose, onSave }) => {
         {/* 🔹 Sub-Services (If Exist) */}
         <div className="bg-pink-50 border border-pink-100 rounded-md p-4">
           <div className="flex justify-between items-center mb-3">
-            <h4 className="font-medium text-gray-700">Add Ones (Optional)</h4>
+            <h4 className="font-medium text-gray-700">Add Ons (Optional)</h4>
             <button
               type="button"
               onClick={handleAddSub}
               className="border border-[#e91e63] text-[#e91e63] bg-white py-1 px-3 rounded-md hover:bg-pink-50 transition-all text-sm font-medium"
             >
-              + Add Ones
+              + Add Ons
             </button>
           </div>
 
-          {formData.subServices.length === 0 && (
+          {formData.subcategory.length === 0 && (
             <p className="text-sm text-gray-400 italic">
               No sub-service added yet.
             </p>
           )}
 
-          {formData.subServices.map((sub, i) => (
+          {formData.subcategory.map((sub, i) => (
             <div
               key={i}
               className="grid grid-cols-2 gap-4 mb-3 relative bg-white border border-pink-100 rounded-md p-3"
@@ -140,8 +164,8 @@ const UpdateServiceModal = ({ isOpen, service, onClose, onSave }) => {
               <div>
                 <input
                   type="text"
-                  name="name"
-                  value={sub.name}
+                  name="subcategoryName"
+                  value={sub.subcategoryName}
                   onChange={(e) => handleSubChange(i, e)}
                   className="border border-pink-100 rounded-md px-3 py-2 w-full focus:border-[#e91e63] focus:outline-none"
                   placeholder="Sub-service Name"
@@ -150,8 +174,8 @@ const UpdateServiceModal = ({ isOpen, service, onClose, onSave }) => {
               <div>
                 <input
                   type="number"
-                  name="price"
-                  value={sub.price}
+                  name="subcategoryPrice"
+                  value={sub.subcategoryPrice || ""}
                   onChange={(e) => handleSubChange(i, e)}
                   className="border border-pink-100 rounded-md px-3 py-2 w-full focus:border-[#e91e63] focus:outline-none"
                   placeholder="Price ($)"

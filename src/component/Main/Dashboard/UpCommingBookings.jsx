@@ -57,7 +57,7 @@ const UpcomingBooking = () => {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-pink-100 p-4">
+    <div className="bg-white rounded-xl shadow-sm border border-pink-100 p-4 pe-5">
       {/* Header */}
       <div className="flex justify-between items-center mb-4 border-pink-100 border-b pb-2">
         <h3 className="text-md font-semibold text-gray-800">

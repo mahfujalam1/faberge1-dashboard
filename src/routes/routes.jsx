@@ -25,17 +25,17 @@ import BookingsPage from "../page/Bookings/BookingsPage";
 import TransactionsPage from "../page/Transaction/TransactionPage";
 import CreateManager from "../page/CreateManager/CreateManager";
 import ManagerManagement from "../page/ManagerManagement/ManagerManagement";
-import { HelpCircleIcon } from "lucide-react";
 import HelpSupport from "../page/Help&Support/HelpSupport";
 import LegalitiesPage from "../page/legalities/LegalitiesPage";
+import AdminRoutes from "./AdminRoutes";
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: (
-      // <AdminRoutes>
-      // </AdminRoutes>
-      <MainLayout />
+      <AdminRoutes>
+        <MainLayout />
+      </AdminRoutes>
     ),
     errorElement: <h1>Error</h1>,
     children: [

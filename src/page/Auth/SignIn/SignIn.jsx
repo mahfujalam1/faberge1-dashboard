@@ -1,20 +1,28 @@
 import React, { useState } from "react";
 import { EyeInvisibleOutlined, EyeTwoTone } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
+import { useLoginMutation } from "../../../redux/features/auth/authApi";
+import { toast } from "sonner";
 
 const SignIn = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
+  const [login] = useLoginMutation();
   const [remember, setRemember] = useState(false);
-  const navigation = useNavigate()
+  const navigation = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Sign in data:", formData, "Remember:", remember);
+    const res = await login(formData);
+    console.log(res?.data?.message)
+    if (res?.data) {
+      toast.success(res?.data?.message);
+      localStorage.setItem("token", res?.data?.token);
+    }
     navigation('/')
   };
 
@@ -24,7 +32,7 @@ const SignIn = () => {
         {/* Logo */}
         <div className="flex flex-col items-center mb-6">
           <img
-            src="/logo/logo.png" 
+            src="/logo/logo.png"
             alt="IHBS Logo"
             className="w-40 h-40 object-contain mb-2"
           />

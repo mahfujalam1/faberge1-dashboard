@@ -1,0 +1,31 @@
+export const tagTypes = {
+  users: "users",
+  services: "services",
+  dashboard: "dashboard",
+  analytics: "analytics",
+  notifications: "notifications",
+  bookings: "bookings",
+  transactions: "transactions",
+  managers: "managers",
+  states: "states",
+  profile: "profile",
+  privacy: "privacy",
+  termsCondition: "termsCondition",
+  helpSupport: "helpSupport",
+};
+
+export const tagTypesList = [
+  tagTypes.analytics,
+  tagTypes.bookings,
+  tagTypes.dashboard,
+  tagTypes.helpSupport,
+  tagTypes.notifications,
+  tagTypes.transactions,
+  tagTypes.managers,
+  tagTypes.services,
+  tagTypes.states,
+  tagTypes.privacy,
+  tagTypes.profile,
+  tagTypes.termsCondition,
+  tagTypes.users,
+];

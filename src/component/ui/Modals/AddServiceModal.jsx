@@ -1,59 +1,80 @@
 import React, { useState } from "react";
 import { Modal } from "antd";
+import { useAddServiceMutation } from "../../../redux/features/service/service";
+import { toast } from "sonner";
 
-const AddServiceModal = ({ isOpen, onClose, onAddService }) => {
+const AddServiceModal = ({ isOpen, onClose }) => {
   const [service, setService] = useState({
-    name: "",
-    price: "",
-    subServices: [],
+    serviceName: "",
+    price: 0,
+    subcategory: [],
   });
+  const [addService] = useAddServiceMutation();
 
   // 🔹 Handle main service input
   const handleMainChange = (e) => {
     const { name, value } = e.target;
-    setService((prev) => ({ ...prev, [name]: value }));
+
+    const updatedValue = name === "price" ? parseFloat(value) : value;
+
+    setService((prev) => ({ ...prev, [name]: updatedValue }));
   };
 
   // 🔹 Add a sub-service (max 4)
   const handleAddSubService = () => {
-    if (service.subServices.length >= 4) return; // limit to 4
+    if (service.subcategory.length >= 4) return;
     setService((prev) => ({
       ...prev,
-      subServices: [...prev.subServices, { name: "", price: "" }],
+      subcategory: [
+        ...prev.subcategory,
+        { subcategoryName: "", subcategoryPrice: null },
+      ],
     }));
   };
 
   // 🔹 Handle sub-service change
   const handleSubChange = (index, e) => {
     const { name, value } = e.target;
-    const updated = [...service.subServices];
-    updated[index][name] = value;
-    setService((prev) => ({ ...prev, subServices: updated }));
+
+    const updated = [...service.subcategory];
+
+    updated[index][name] =
+      name === "subcategoryPrice" ? parseFloat(value) : value;
+
+    setService((prev) => ({ ...prev, subcategory: updated }));
   };
 
   // 🔹 Remove sub-service
   const handleRemoveSubService = (index) => {
-    const updated = [...service.subServices];
+    const updated = [...service.subcategory];
     updated.splice(index, 1);
-    setService((prev) => ({ ...prev, subServices: updated }));
+    setService((prev) => ({ ...prev, subcategory: updated }));
   };
 
   // 🔹 Create service
-  const handleCreate = () => {
-    if (!service.name || !service.price) return;
+  const handleCreate = async () => {
+    try {
+      if (!service.serviceName || isNaN(service.price)) return;
 
-    const newService = {
-      ...service,
-      subServices: service.subServices.filter(
-        (s) => s.name.trim() && s.price.trim()
-      ),
-    };
+      const newService = {
+        ...service,
+        subcategory: service.subcategory.filter(
+          (s) => s.subcategoryName.trim() && !isNaN(s.subcategoryPrice)
+        ),
+      };
 
-    onAddService([newService]); // keeping structure same for parent
-    onClose();
+      const res = await addService(newService).unwrap();
+      toast.success(res?.message);
 
-    // Reset after submit
-    setService({ name: "", price: "", subServices: [] });
+      onClose();
+
+      // Reset after submit
+      setService({ serviceName: "", price: 0, subcategory: [] });
+    } catch (err) {
+      setService({ serviceName: "", price: 0, subcategory: [] });
+      console.log(err);
+      toast.error(err);
+    }
   };
 
   return (
@@ -79,8 +100,8 @@ const AddServiceModal = ({ isOpen, onClose, onAddService }) => {
             </label>
             <input
               type="text"
-              name="name"
-              value={service.name}
+              name="serviceName" // Change name attribute to match state property
+              value={service.serviceName} // Reference serviceName in value
               onChange={handleMainChange}
               className="border border-pink-100 rounded-md px-3 py-2 w-full focus:border-[#e91e63] focus:outline-none"
               placeholder="Enter Service Name"
@@ -91,7 +112,7 @@ const AddServiceModal = ({ isOpen, onClose, onAddService }) => {
             <input
               type="number"
               name="price"
-              value={service.price}
+              value={service.price || Number}
               onChange={handleMainChange}
               className="border border-pink-100 rounded-md px-3 py-2 w-full focus:border-[#e91e63] focus:outline-none"
               placeholder="Enter Price"
@@ -107,9 +128,9 @@ const AddServiceModal = ({ isOpen, onClose, onAddService }) => {
             <button
               type="button"
               onClick={handleAddSubService}
-              disabled={service.subServices.length >= 4}
+              disabled={service.subcategory.length >= 4}
               className={`border border-[#e91e63] text-[#e91e63] bg-white py-1 px-3 rounded-md text-sm font-medium transition-all ${
-                service.subServices.length >= 4
+                service.subcategory.length >= 4
                   ? "opacity-50 cursor-not-allowed"
                   : "hover:bg-pink-50"
               }`}
@@ -118,13 +139,13 @@ const AddServiceModal = ({ isOpen, onClose, onAddService }) => {
             </button>
           </div>
 
-          {service.subServices.length === 0 && (
+          {service.subcategory.length === 0 && (
             <p className="text-sm text-gray-400 italic">
               No sub-service added yet.
             </p>
           )}
 
-          {service.subServices.map((sub, i) => (
+          {service.subcategory.map((sub, i) => (
             <div
               key={i}
               className="grid grid-cols-2 gap-4 mb-3 relative bg-white border border-pink-100 rounded-md p-3"
@@ -132,8 +153,8 @@ const AddServiceModal = ({ isOpen, onClose, onAddService }) => {
               <div>
                 <input
                   type="text"
-                  name="name"
-                  value={sub.name}
+                  name="subcategoryName"
+                  value={sub.subcategoryName}
                   onChange={(e) => handleSubChange(i, e)}
                   className="border border-pink-100 rounded-md px-3 py-2 w-full focus:border-[#e91e63] focus:outline-none"
                   placeholder="Sub-service Name"
@@ -142,8 +163,8 @@ const AddServiceModal = ({ isOpen, onClose, onAddService }) => {
               <div>
                 <input
                   type="number"
-                  name="price"
-                  value={sub.price}
+                  name="subcategoryPrice"
+                  value={sub.subcategoryPrice || Number}
                   onChange={(e) => handleSubChange(i, e)}
                   className="border border-pink-100 rounded-md px-3 py-2 w-full focus:border-[#e91e63] focus:outline-none"
                   placeholder="Price ($)"
@@ -161,7 +182,7 @@ const AddServiceModal = ({ isOpen, onClose, onAddService }) => {
           ))}
 
           {/* Limit Message */}
-          {service.subServices.length >= 4 && (
+          {service.subcategory.length >= 4 && (
             <p className="text-xs text-gray-500 italic text-center mt-2">
               You can add a maximum of 4 Add-Ons per service.
             </p>

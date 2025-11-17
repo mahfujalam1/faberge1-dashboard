@@ -1,16 +1,31 @@
 /* eslint-disable react/prop-types */
-// AdminRoutes.js
 import { Navigate } from "react-router-dom";
-import { useSelector } from "react-redux";
 
 const AdminRoutes = ({ children }) => {
-  const { user } = useSelector((state) => state.auth);
-  const isAdmin = user && user.role === "admin";
-  if (!isAdmin) {
-    return <Navigate to="/auth" replace />;
+  // localStorage থেকে token এবং user পড়া
+  const token = localStorage.getItem("token");
+  // const userStr = localStorage.getItem("user");
+  const userStr = true
+
+  // Token বা user না থাকলে auth route এ redirect
+  if (!token || !userStr) {
+    return <Navigate to="/auth/sign-in" replace />;
   }
 
-  // If admin, render the requested admin route component
+  let user = null;
+  try {
+    user = JSON.parse(userStr);
+  } catch (error) {
+    console.error("Error parsing user from localStorage:", error);
+    return <Navigate to="/auth/sign-in" replace />;
+  }
+
+  // User না থাকলে auth এ redirect
+  if (!user) {
+    return <Navigate to="/auth/sign-in" replace />;
+  }
+
+  // সব ঠিক থাকলে route render করবে
   return <>{children}</>;
 };
 

@@ -4,39 +4,35 @@ import UpdateServiceModal from "../../component/ui/Modals/UpdateServiceModal";
 import ConfirmationModal from "../../component/ui/Modals/ConfirmationModal";
 import AddServiceModal from "../../component/ui/Modals/AddServiceModal";
 import { allServices } from "../../constants/service";
-import { Button, Tooltip } from "antd";
+import { Button, Skeleton, Tooltip } from "antd";
+import {
+  useDeleteServiceMutation,
+  useGetAllServicesQuery,
+} from "../../redux/features/service/service";
+import { toast } from "sonner";
 
 const ServicePage = () => {
-  const [services, setServices] = useState(allServices);
-  const [deleteId, setDeleteId] = useState(null);
-  const [editService, setEditService] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [service, setService] = useState({});
 
-  const handleDelete = (id) => setDeleteId(id);
-  const confirmDelete = () => {
-    setServices((prev) => prev.filter((s) => s.id !== deleteId));
-    setDeleteId(null);
-  };
-  const cancelDelete = () => setDeleteId(null);
+  const { data, isLoading } = useGetAllServicesQuery({});
+  const [deleteService] = useDeleteServiceMutation();
+  const services = data?.data;
 
-  const handleEdit = (service) => setEditService(service);
-
-  const handleUpdate = (updated) => {
-    setServices((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
-    setEditService(null);
+  const handleUpdate = (service) => {
+    setService(service);
+    setShowEditModal(true);
   };
 
-  // 🟣 Add Service with Sub-services
-  const handleAddService = (newServices) => {
-    const formatted = newServices.map((srv, i) => ({
-      id: services.length + i + 1,
-      name: srv.name,
-      price: srv.price,
-      subServices: srv.subServices || [],
-    }));
-
-    setServices((prev) => [...prev, ...formatted]);
-    setShowAddModal(false);
+  const handleDelete = async (id) => {
+    try {
+      const res = await deleteService(id);
+      toast.success(res?.data?.message);
+    } catch (err) {
+      toast.error(err.message);
+      console.log(err);
+    }
   };
 
   return (
@@ -62,43 +58,53 @@ const ServicePage = () => {
               <th className="px-6 py-3 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody>
-            {services.map((service) => (
-              <tr
-                key={service.id}
-                className="border-b border-pink-100 hover:bg-pink-50 transition-all"
-              >
-                <td className="px-6 py-3">
-                  <div>
-                    <p className="font-medium">{service.name}</p>
-                    {/* Show sub-services if any */}
-                  </div>
-                </td>
-                <td className="px-6 py-3">${service.price}</td>
-                <td className="px-6 py-3">
-                  {service.subServices?.length > 0 && (
-                    <ul className="text-xs text-gray-500 mt-1 list-disc ml-5">
-                      {service.subServices.map((sub, idx) => (
-                        <li key={idx}>
-                          {sub.name} — ${sub.price}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </td>
-                <td className="px-6 py-3 text-right flex justify-end gap-4 text-[#e91e63]">
-                  <EditOutlined
-                    onClick={() => handleEdit(service)}
-                    className="cursor-pointer hover:text-pink-500 text-lg"
-                  />
-                  <DeleteOutlined
-                    onClick={() => handleDelete(service.id)}
-                    className="cursor-pointer hover:text-red-500 text-lg"
-                  />
+          {!isLoading ? (
+            <tbody>
+              {services?.map((service) => (
+                <tr
+                  key={service._id}
+                  className="border-b border-pink-100 hover:bg-pink-50 transition-all"
+                >
+                  <td className="px-6 py-3">
+                    <div>
+                      <p className="font-medium">{service.serviceName}</p>
+                      {/* Show sub-services if any */}
+                    </div>
+                  </td>
+                  <td className="px-6 py-3">${service.price}</td>
+                  <td className="px-6 py-3">
+                    {service.subcategory?.length > 0 && (
+                      <ul className="text-xs text-gray-500 mt-1 list-disc ml-5">
+                        {service.subcategory.map((sub, idx) => (
+                          <li key={idx}>
+                            {sub.subcategoryName} — ${sub.subcategoryPrice}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </td>
+                  <td className="px-6 py-3 text-right flex justify-end gap-4 text-[#e91e63]">
+                    <EditOutlined
+                      onClick={() => handleUpdate(service)}
+                      className="cursor-pointer hover:text-pink-500 text-lg"
+                    />
+                    <DeleteOutlined
+                      onClick={() => handleDelete(service._id)}
+                      className="cursor-pointer hover:text-red-500 text-lg"
+                    />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          ) : (
+            <tbody>
+              <tr>
+                <td colSpan="4" className="px-6 py-3">
+                  <Skeleton active paragraph={{ rows: 1 }} />
                 </td>
               </tr>
-            ))}
-          </tbody>
+            </tbody>
+          )}
         </table>
       </div>
       <div className="mt-6">
@@ -117,27 +123,15 @@ const ServicePage = () => {
         </div>
       </div>
 
-      <ConfirmationModal
-        isOpen={!!deleteId}
-        title="Delete Service"
-        message="Are you sure you want to delete this service?"
-        confirmText="Delete"
-        cancelText="Cancel"
-        onConfirm={confirmDelete}
-        onCancel={cancelDelete}
-      />
-
       <UpdateServiceModal
-        isOpen={!!editService}
-        service={editService}
-        onClose={() => setEditService(null)}
-        onSave={handleUpdate}
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        service={service}
       />
 
       <AddServiceModal
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
-        onAddService={handleAddService}
       />
     </div>
   );

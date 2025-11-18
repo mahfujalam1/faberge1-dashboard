@@ -1,61 +1,79 @@
-import React, { useRef, useState } from "react";
-import { EditOutlined } from "@ant-design/icons";
+import React, { useState, useRef, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { IoChevronBack } from "react-icons/io5";
+import { EditOutlined } from "@ant-design/icons";
+import {
+  useGetMyProfileQuery,
+  useUpdateUserMutation,
+} from "../../../redux/features/profile/profileApi";
+import { toast } from "sonner";
+import EditProfile from "./EditProfile";
+import ChangePassword from "./ChangePassword";
 
 const ProfileForm = () => {
   const [activeTab, setActiveTab] = useState("edit");
-  const [profile, setProfile] = useState({
-    username: "userdemo",
-    email: "email@gmail.com",
-    phone: "+1 222 333 4444",
-  });
-  const [passwords, setPasswords] = useState({
-    currentPassword: "",
-    newPassword: "",
-    confirmPassword: "",
-  });
-  const [profileImage, setProfileImage] = useState(
-    "https://randomuser.me/api/portraits/men/45.jpg"
-  );
+  const { data: profile, refetch } = useGetMyProfileQuery();
+  const [updateProfile, { isLoading }] = useUpdateUserMutation();
+  const [file, setFile] = useState(null); // Store the file here
+  const [previewImage, setPreviewImage] = useState(""); // Preview the image
   const fileInputRef = useRef(null);
 
-  const handleProfileChange = (e) => {
-    setProfile({ ...profile, [e.target.name]: e.target.value });
+  // Set profile image preview when profile data loads
+  useEffect(() => {
+    if (profile?.uploadPhoto) {
+      setPreviewImage(profile.uploadPhoto);
+    }
+  }, [profile]);
+
+  // Handle profile update
+  const handleUpdateProfile = async (formData) => {
+    try {
+      const data = new FormData();
+
+      // Append user details
+      data.append("firstName", formData.firstName);
+      data.append("lastName", formData.lastName);
+      data.append("phone", formData.phone);
+
+      // Append photo only if it's set (binary data)
+      if (file) {
+        data.append("managerProfileImage", file); // Append the actual file as binary data
+      }
+
+      const res = await updateProfile(data);
+
+      if (res?.data) {
+        toast.success(res?.data?.message || "Profile updated successfully!");
+        refetch(); // Refresh the profile data
+      } else {
+        console.log(res?.error?.data?.message || "Failed to update profile");
+      }
+    } catch (err) {
+      console.log(err.message);
+    }
   };
 
-  const handlePasswordChange = (e) => {
-    setPasswords({ ...passwords, [e.target.name]: e.target.value });
-  };
-
-  const handleProfileSubmit = (e) => {
-    e.preventDefault();
-    console.log("Updated Profile:", profile);
-  };
-
-  const handlePasswordSubmit = (e) => {
-    e.preventDefault();
-    console.log("Password Change Request:", passwords);
-  };
-
-  // 🔹 Open file picker
+  // Trigger file input click
   const handleIconClick = () => {
     fileInputRef.current.click();
   };
 
-  // 🔹 Handle file selection & preview
+  // Handle file selection and preview
   const handleFileChange = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const imageUrl = URL.createObjectURL(file);
-      setProfileImage(imageUrl);
+    const selectedFile = event.target.files[0];
+    if (selectedFile) {
+      setFile(selectedFile); // Store the selected file in state
+
+      // Preview the selected image
+      const imageUrl = URL.createObjectURL(selectedFile);
+      setPreviewImage(imageUrl);
     }
   };
 
   return (
     <div className="p-6">
       <div className="flex justify-between items-center">
-        <div className="flex  items-center">
+        <div className="flex items-center">
           <Link to="/">
             <IoChevronBack className="text-2xl" />
           </Link>
@@ -67,9 +85,12 @@ const ProfileForm = () => {
         {/* Profile Header */}
         <div className="bg-white shadow-sm rounded-xl p-8 flex flex-col items-center mb-8 relative">
           <div className="relative">
-            {/* Profile Image */}
             <img
-              src={profileImage}
+              src={
+                previewImage ||
+                profile?.uploadPhoto ||
+                "https://avatar.iran.liara.run/public/38"
+              }
               alt="profile"
               className="w-28 h-28 rounded-full object-cover border-4 border-pink-100"
             />
@@ -93,7 +114,7 @@ const ProfileForm = () => {
           </div>
 
           <h2 className="text-2xl font-semibold text-gray-800 mt-3">
-            Mr. Admin
+            {profile?.firstName + " " + profile?.lastName}
           </h2>
         </div>
 
@@ -125,104 +146,13 @@ const ProfileForm = () => {
         <div className="bg-white rounded-xl shadow-sm p-8 w-full">
           <div className="max-w-lg mx-auto">
             {activeTab === "edit" ? (
-              <form onSubmit={handleProfileSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-semibold mb-1">
-                    User Name
-                  </label>
-                  <input
-                    type="text"
-                    name="username"
-                    value={profile.username}
-                    onChange={handleProfileChange}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#e91e63]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold mb-1">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={profile.email}
-                    onChange={handleProfileChange}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#e91e63]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold mb-1">
-                    Contact No
-                  </label>
-                  <input
-                    type="text"
-                    name="phone"
-                    value={profile.phone}
-                    onChange={handleProfileChange}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#e91e63]"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full bg-[#e91e63] text-white py-2 rounded-lg hover:bg-pink-600 transition-all font-semibold mt-4"
-                >
-                  Update Profile
-                </button>
-              </form>
+              <EditProfile
+                profile={profile}
+                onUpdateProfile={handleUpdateProfile}
+                isLoading={isLoading}
+              />
             ) : (
-              <form onSubmit={handlePasswordSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-semibold mb-1">
-                    Current Password
-                  </label>
-                  <input
-                    type="password"
-                    name="currentPassword"
-                    placeholder="Current Password..."
-                    value={passwords.currentPassword}
-                    onChange={handlePasswordChange}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#e91e63]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold mb-1">
-                    New Password
-                  </label>
-                  <input
-                    type="password"
-                    name="newPassword"
-                    placeholder="New Password..."
-                    value={passwords.newPassword}
-                    onChange={handlePasswordChange}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#e91e63]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold mb-1">
-                    Confirm Password
-                  </label>
-                  <input
-                    type="password"
-                    name="confirmPassword"
-                    placeholder="Confirm Password..."
-                    value={passwords.confirmPassword}
-                    onChange={handlePasswordChange}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#e91e63]"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  className="w-full bg-[#e91e63] text-white py-2 rounded-lg hover:bg-pink-600 transition-all font-semibold mt-4"
-                >
-                  Update Password
-                </button>
-              </form>
+              <ChangePassword />
             )}
           </div>
         </div>

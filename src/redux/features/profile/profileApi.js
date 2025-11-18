@@ -1,38 +1,36 @@
 import { baseApi } from "../../baseApi/baseApi";
+import { tagTypes } from "../../tagTypes";
 
 const profileApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getUser: builder.query({
-      query: (id) => ({
-        url:`/admin/user/${id}`,
+    getMyProfile: builder.query({
+      query: () => ({
+        url: "/manager/me",
         method: "GET",
       }),
-      providesTags: ["User"],
-      transformResponse: (response) => response?.data?.attributes,
+      providesTags: [tagTypes.users],
     }),
-
     updateUser: builder.mutation({
       query: (data) => ({
-        url: "/user/update",
+        url: "/manager/update-profile",
         method: "PATCH",
         body: data,
       }),
-      invalidatesTags: ["User"],
-      transformResponse: (response) => response.data,
+      invalidatesTags: [tagTypes.users],
     }),
     changePassword: builder.mutation({
       query: (data) => ({
-        url: "/auth/change-password",
-        method: "PATCH",
+        url: "/manager/change-password",
+        method: "POST",
         body: data,
       }),
-      transformResponse: (response) => response.data,
+      invalidatesTags: [tagTypes.users],
     }),
   }),
 });
 
 export const {
-  useGetUserQuery,
+  useGetMyProfileQuery,
   useUpdateUserMutation,
   useChangePasswordMutation,
 } = profileApi;

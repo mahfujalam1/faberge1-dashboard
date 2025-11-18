@@ -29,14 +29,14 @@ const States = () => {
   useEffect(() => {
     if (states) {
       setActiveStates(
-        states.filter((state) => state.active).map((state) => state._id)
+        states?.filter((state) => state.active)?.map((state) => state._id)
       );
     }
   }, [states]);
 
-  const sortedStates = [...states]?.sort((a, b) =>
-    a.name.localeCompare(b.name)
-  );
+  const sortedStates = (
+    states && Array.isArray(states) ? [...states] : []
+  ).sort((a, b) => a.name.localeCompare(b.name));
 
   if (isLoading) {
     return (

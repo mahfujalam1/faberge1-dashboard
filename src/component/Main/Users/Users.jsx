@@ -1,11 +1,12 @@
 import React, { useState } from "react";
 import { PlusOutlined } from "@ant-design/icons";
 import { Button } from "antd";
-import UserTable from "../../ui/UserTable";
+import UserTable from "./UserTable";
 import UserDetailsModal from "../../ui/Modals/UserDetailsModal";
 import ConfirmationModal from "../../ui/Modals/ConfirmationModal";
 import CreateWorkerModal from "../../ui/Modals/CreateWorkerModal";
 import { allServices } from "../../../constants/service";
+import WorkerTable from "./workerTable";
 
 const UserManagement = () => {
   const [activeTab, setActiveTab] = useState("worker");
@@ -17,8 +18,8 @@ const UserManagement = () => {
       firstName: "Mahfuj",
       lastName: "Alam",
       address: "Dhaka, Mohakhali",
-      zipCode:"1200",
-      title:"Nail Tech",
+      zipCode: "1200",
+      title: "Nail Tech",
       city: "Dhaka",
       state: "Bangladesh",
       email: "mahfujalam5795@gmail.com",
@@ -63,7 +64,7 @@ const UserManagement = () => {
     },
   ]);
 
-  const [selectedUser, setSelectedUser] = useState(null);
+
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
@@ -174,21 +175,19 @@ const UserManagement = () => {
         )}
       </div>
 
-      {/* Table */}
-      <UserTable
-        data={tableData}
-        type={activeTab}
-        onView={setSelectedUser}
-        onDelete={handleDeleteClick}
-      />
+      {activeTab === "customer" && (
+        <>
+          <UserTable type={activeTab} />
+        </>
+      )}
 
-      {/* Details Modal */}
-      <UserDetailsModal
-        isOpen={!!selectedUser}
-        user={selectedUser}
-        type={activeTab}
-        onClose={() => setSelectedUser(null)}
-      />
+      {activeTab === "worker" && (
+        <>
+          <WorkerTable type={activeTab} />
+        </>
+      )}
+
+
 
       {/* Delete Confirmation */}
       <ConfirmationModal

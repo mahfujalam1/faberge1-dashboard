@@ -1,23 +1,16 @@
 import { baseApi } from "../../baseApi/baseApi";
+import { tagTypes } from "../../tagTypes";
 
 const userApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getAllUsers: builder.query({
-      query: (args) => {
-        console.log(args);
-        const params = new URLSearchParams();
-
-        if (args) {
-          args.forEach((item) => {
-            params.append(item.name, item.value);
-          });
-        }
+      query: ({ page, limit, sortBy }) => {
         return {
-          url: "/admin/all-users",
+          url: `/customer/get-all-customers?page=${page}&limit=${limit}&sortOrder=${sortBy}`,
           method: "GET",
-          params,
         };
       },
+      providesTags:[tagTypes.users]
     }),
   }),
 });

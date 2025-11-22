@@ -1,11 +1,16 @@
 import { useRef, useState } from "react";
 import { Modal, Select, Table } from "antd";
 import { UploadOutlined, DeleteOutlined } from "@ant-design/icons";
-import { allServices } from "../../../constants/service";
+import { useGetAllServicesQuery } from "../../../redux/features/service/service";
+import { useCreateWorkerMutation } from "../../../redux/features/worker/worker";
 
 const CreateWorkerModal = ({ isOpen, onClose }) => {
   const fileInputRef = useRef(null);
   const [imagePreview, setImagePreview] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
+  const { data } = useGetAllServicesQuery({});
+  const [createWorker] = useCreateWorkerMutation();
+  const allServices = data?.data;
 
   // 🔹 Worker Info
   const [formData, setFormData] = useState({
@@ -15,15 +20,13 @@ const CreateWorkerModal = ({ isOpen, onClose }) => {
     city: "",
     state: "",
     zip: "",
-    title:"",
+    title: "",
     workerId: "",
     phone: "",
     email: "",
     password: "",
     confirmPassword: "",
   });
-
-  // 🔹 Static Services
 
   const [selectedServices, setSelectedServices] = useState([]);
   const [selectedSubServices, setSelectedSubServices] = useState({});
@@ -35,7 +38,10 @@ const CreateWorkerModal = ({ isOpen, onClose }) => {
   // 🔹 Handle image upload
   const handleImageChange = (e) => {
     const file = e.target.files[0];
-    if (file) setImagePreview(URL.createObjectURL(file));
+    if (file) {
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
   };
 
   // 🔹 Select main service
@@ -62,28 +68,47 @@ const CreateWorkerModal = ({ isOpen, onClose }) => {
   };
 
   // 🔹 Submit
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const payload = {
-      ...formData,
-      image: imagePreview,
-      selectedServices: selectedServices.map((srv) => {
-        const found = allServices.find((s) => s.name === srv);
-        return {
-          name: found.name,
-          price: found.price,
-          subServices:
-            found.subServices.length > 0
-              ? (selectedSubServices[srv] || []).map((sub) =>
-                  found.subServices.find((ss) => ss.name === sub)
-                )
-              : [],
-        };
-      }),
-    };
+    // Create FormData instance
+    const postData = new FormData();
 
-    console.log("👷 Worker Created:", payload);
+    // Append all form fields
+    Object.keys(formData).forEach((key) => {
+      postData.append(key, formData[key]);
+    });
+
+    // Append image file if exists
+    if (imageFile) {
+      postData.append("workerProfileImage", imageFile);
+    }
+
+    // Prepare services array
+    const servicesArray = selectedServices.map((srv) => {
+      const found = allServices?.find((s) => s.serviceName === srv);
+      return {
+        service: found._id,
+        subcategories:
+          found?.subcategory.length > 0
+            ? (selectedSubServices[srv] || []).map((sub) => {
+                const subService = found.subcategory.find(
+                  (ss) => ss.subcategoryName === sub
+                );
+                return subService._id;
+              })
+            : [],
+      };
+    });
+
+    // Append services as JSON string
+    postData.append("services", JSON.stringify(servicesArray));
+
+    console.log("👷 Worker Created - FormData prepared");
+    console.log("Services:", servicesArray);
+    const res = await createWorker(postData);
+    console.log(res);
+
     onClose();
   };
 
@@ -135,7 +160,6 @@ const CreateWorkerModal = ({ isOpen, onClose }) => {
 
         {/* Basic Info */}
         {Object.keys(formData).map((key) => {
-          // ✅ Custom placeholder labels
           let placeholder = key
             .replace(/([A-Z])/g, " $1")
             .replace(/^./, (s) => s.toUpperCase());
@@ -172,7 +196,10 @@ const CreateWorkerModal = ({ isOpen, onClose }) => {
             placeholder="Select a service"
             style={{ width: "100%" }}
             onSelect={handleSelectMainService}
-            options={allServices.map((s) => ({ label: s.name, value: s.name }))}
+            options={allServices?.map((s) => ({
+              label: s.serviceName,
+              value: s.serviceName,
+            }))}
           />
         </div>
 
@@ -183,9 +210,9 @@ const CreateWorkerModal = ({ isOpen, onClose }) => {
               Selected Services
             </h3>
 
-            {selectedServices.map((srv) => {
-              const service = allServices.find((s) => s.name === srv);
-              const hasSub = service.subServices.length > 0;
+            {selectedServices?.map((srv) => {
+              const service = allServices?.find((s) => s.serviceName === srv);
+              const hasSub = service?.subcategory?.length > 0;
 
               return (
                 <div
@@ -195,7 +222,7 @@ const CreateWorkerModal = ({ isOpen, onClose }) => {
                   <div className="flex justify-between items-center mb-2">
                     <h4 className="font-semibold text-gray-800">
                       {srv} —{" "}
-                      <span className="text-gray-500">${service.price}</span>
+                      <span className="text-gray-500">${service?.price}</span>
                     </h4>
                     <DeleteOutlined
                       onClick={() => handleDeleteService(srv)}
@@ -214,24 +241,25 @@ const CreateWorkerModal = ({ isOpen, onClose }) => {
                         placeholder="Select sub-services"
                         value={selectedSubServices[srv] || []}
                         onChange={(v) => handleSelectSubService(srv, v)}
-                        options={service.subServices.map((ss) => ({
-                          label: `${ss.name} ($${ss.price})`,
-                          value: ss.name,
+                        options={service?.subcategory?.map((ss) => ({
+                          label: `${ss.subcategoryName} ($${ss.subcategoryPrice})`,
+                          value: ss.subcategoryName,
                         }))}
                       />
 
                       {selectedSubServices[srv]?.length > 0 && (
                         <Table
                           className="mt-3"
-                          dataSource={service.subServices
+                          dataSource={service?.subcategory
                             .filter((ss) =>
-                              selectedSubServices[srv]?.includes(ss.name)
+                              selectedSubServices[srv]?.includes(
+                                ss.subcategoryName
+                              )
                             )
                             .map((ss, i) => ({
                               key: i,
-                              name: ss.name,
-                              price: `$${ss.price}`,
-                              water: `$${ss.water}`,
+                              name: ss.subcategoryName,
+                              price: `$${ss.subcategoryPrice}`,
                             }))}
                           pagination={false}
                           size="small"
@@ -239,14 +267,13 @@ const CreateWorkerModal = ({ isOpen, onClose }) => {
                           columns={[
                             { title: "Sub Service", dataIndex: "name" },
                             { title: "Price", dataIndex: "price" },
-                            { title: "Water", dataIndex: "water" },
                           ]}
                         />
                       )}
                     </>
                   ) : (
                     <p className="text-sm text-gray-600 italic">
-                      No sub-services (Base price ${service.price})
+                      No sub-services (Base price ${service?.price})
                     </p>
                   )}
                 </div>

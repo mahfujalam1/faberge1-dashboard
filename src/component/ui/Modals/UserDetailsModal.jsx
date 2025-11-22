@@ -3,7 +3,6 @@ import { CloseOutlined } from "@ant-design/icons";
 
 const UserDetailsModal = ({ isOpen, user, type, onClose, onAction }) => {
   if (!isOpen) return null;
-  console.log(user)
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[9999] transition-all">
@@ -20,7 +19,7 @@ const UserDetailsModal = ({ isOpen, user, type, onClose, onAction }) => {
         {/* Header */}
         <div className="text-center mb-6">
           <h2 className="text-2xl font-semibold text-gray-800">
-            {type === "worker" ? "Worker Details" : "Customer Details"}
+            {user?.role === "worker" ? "Worker Details" : "Customer Details"}
           </h2>
           <p className="text-sm text-gray-500 mt-1">
             See all details about{" "}
@@ -31,8 +30,8 @@ const UserDetailsModal = ({ isOpen, user, type, onClose, onAction }) => {
         {/* Profile Image + Name */}
         <div className="flex flex-col items-center mb-5">
           <img
-            src={user?.avatar}
-            alt={user?.name}
+            src={user?.uploadPhoto || "https://avatar.iran.liara.run/public/19"}
+            alt={user?.firstName}
             className="w-24 h-24 rounded-full object-cover border-4 border-pink-100 shadow-sm mb-3"
           />
           <p className="text-lg font-semibold text-gray-800">{user?.name}</p>
@@ -56,7 +55,7 @@ const UserDetailsModal = ({ isOpen, user, type, onClose, onAction }) => {
             <span>{user?.state || "New York"}</span>
           </div>
 
-          {type === "customer" && (
+          {user?.role === "customer" && (
             <>
               <div className="flex justify-between">
                 <span className="font-medium text-gray-600">Email:</span>
@@ -73,15 +72,17 @@ const UserDetailsModal = ({ isOpen, user, type, onClose, onAction }) => {
             </>
           )}
 
-          {type === "worker" && (
+          {user?.role === "worker" && (
             <>
               <div className="flex justify-between">
                 <span className="font-medium text-gray-600">ZipCode: </span>
                 <span>{user?.zipCode}</span>
               </div>
               <div className="flex justify-between">
-                <span className="font-medium text-gray-600">User Type / Title: </span>
-                <span>Worker / {user.title}</span>
+                <span className="font-medium text-gray-600">
+                  User Type / Title:{" "}
+                </span>
+                <span>Worker / {user.title || "Nail Tech"}</span>
               </div>
               <div>
                 <span className="block font-medium text-gray-600 mb-1">

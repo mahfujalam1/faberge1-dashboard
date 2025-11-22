@@ -3,54 +3,54 @@ import { Input } from "antd";
 import { useState } from "react";
 import BookingDetailsModal from "../../component/ui/Modals/BookingDetailsModal";
 import ConfirmationModal from "../../component/ui/Modals/ConfirmationModal";
-
-// ... your mockBookings array stays the same
-
-const mockBookings = [
-  {
-    id: 1,
-    customerName: "John S.",
-    workerName: "Sophia R.",
-    userId: "ID# 6592",
-    service: "Manicure + Pedicure + Water + Gel",
-    date: "10/12/2025, 10 AM",
-    status: "Upcoming",
-    avatar: "https://randomuser.me/api/portraits/women/65.jpg",
-  },
-  {
-    id: 2,
-    customerName: "Alice M.",
-    workerName: "David P.",
-    userId: "ID# 7834",
-    service: "Pedicure + Gel",
-    date: "12/01/2025, 3 PM",
-    status: "Completed",
-    avatar: "https://randomuser.me/api/portraits/men/66.jpg",
-  },
-  {
-    id: 3,
-    customerName: "John D.",
-    workerName: "Clara L.",
-    userId: "ID# 2319",
-    service: "Nail Art + Water",
-    date: "12/15/2025, 11 AM",
-    status: "Upcoming",
-    avatar: "https://randomuser.me/api/portraits/men/67.jpg",
-  },
-];
+import { useGetAllBookingsQuery } from "../../redux/features/booking/booking";
 
 const BookingsPage = () => {
-  const [bookings, setBookings] = useState(mockBookings);
+  const { data } = useGetAllBookingsQuery({ page: 1, limit: 10, status: "" });
+  const bookings = data?.data;
   const [searchValue, setSearchValue] = useState("");
   const [deleteId, setDeleteId] = useState(null);
-  const [selectedBooking, setSelectedBooking] = useState(null); // ✅ new state
+  const [selectedBooking, setSelectedBooking] = useState(null);
 
-  const filteredBookings = bookings.filter((b) =>
-    b.customerName.toLowerCase().includes(searchValue.toLowerCase())
+  const filteredBookings = bookings?.filter((b) =>
+    b.customer?.firstName.toLowerCase().includes(searchValue.toLowerCase())
   );
 
+  // Format date and time
+  const formatDateTime = (dateString) => {
+    const date = new Date(dateString);
+    const formattedDate = date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+    const formattedTime = date.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    return `${formattedDate}, ${formattedTime}`;
+  };
+
+  // Format services display
+  const formatServices = (services) => {
+    console.log(services)
+    if (!services || services.length === 0) return "N/A";
+
+    return services
+      .map((serviceItem) => {
+        const mainService =
+          serviceItem.service?.serviceName || "Unknown Service";
+        const subServices = serviceItem.subcategories
+          ?.map((sub) => sub.subcategoryName)
+          .join(", ");
+
+        return subServices ? `${mainService} (${subServices})` : mainService;
+      })
+      .join(" | ");
+  };
+
   const handleView = (booking) => {
-    setSelectedBooking(booking); // ✅ open modal
+    setSelectedBooking(booking);
   };
 
   const handleDelete = (id) => {
@@ -58,11 +58,12 @@ const BookingsPage = () => {
   };
 
   const confirmDelete = () => {
-    setBookings(bookings.filter((b) => b.id !== deleteId));
+    // setBookings(bookings.filter((b) => b.id !== deleteId));
     setDeleteId(null);
   };
 
   const cancelDelete = () => setDeleteId(null);
+
   return (
     <div className="p-6 overflow-x-auto md:w-[420px] lg:w-[680px] xl:w-full">
       <h1 className="text-xl font-semibold text-gray-800 mb-4">All Bookings</h1>
@@ -86,29 +87,34 @@ const BookingsPage = () => {
               <tr>
                 <th className="px-6 py-3 w-[200px]">Customer</th>
                 <th className="px-6 py-3 w-[200px]">Worker</th>
-                <th className="px-6 py-3 w-[200px]">Service</th>
-                <th className="px-6 py-3 w-[160px]">Date & Time</th>
+                <th className="px-6 py-3 w-[250px]">Service</th>
+                <th className="px-6 py-3 w-[180px]">Date & Time</th>
                 <th className="px-6 py-3 w-[120px]">Status</th>
                 <th className="px-6 py-3 text-right w-[100px]">Actions</th>
               </tr>
             </thead>
 
             <tbody>
-              {filteredBookings.length > 0 ? (
-                filteredBookings.map((booking) => (
+              {filteredBookings?.length > 0 ? (
+                filteredBookings?.map((booking) => (
                   <tr
-                    key={booking.id}
+                    key={booking._id}
                     className="border-b border-pink-100 hover:bg-pink-50 transition-all"
                   >
                     <td className="px-6 py-3">
                       <div className="flex items-center gap-3">
                         <img
-                          src={booking.avatar}
-                          alt={booking.customerName}
+                          src={
+                            booking.uploadPhoto ||
+                            "https://avatar.iran.liara.run/public/19"
+                          }
+                          alt={booking?.customer?.firstName}
                           className="w-10 h-10 rounded-full object-cover"
                         />
                         <p className="text-sm font-semibold text-[#e91e63] cursor-pointer hover:underline">
-                          {booking.customerName}
+                          {booking?.customer?.firstName +
+                            " " +
+                            booking?.customer?.lastName}
                         </p>
                       </div>
                     </td>
@@ -116,25 +122,34 @@ const BookingsPage = () => {
                     <td className="px-6 py-3">
                       <div className="flex flex-col">
                         <p className="text-sm font-semibold text-gray-700">
-                          {booking.workerName}
+                          {booking?.worker?.firstName +
+                            " " +
+                            booking?.worker?.lastName}
                         </p>
                         <p className="text-xs text-gray-500">
-                          {booking.userId}
+                          {booking.worker?._id}
                         </p>
                       </div>
                     </td>
 
                     <td className="px-6 py-3 text-gray-600">
-                      {booking.service}
+                      <div className="text-sm">
+                        {formatServices(booking.services)}
+                      </div>
                     </td>
-                    <td className="px-6 py-3 text-gray-600">{booking.date}</td>
+
+                    <td className="px-6 py-3 text-gray-600">
+                      {formatDateTime(booking.date)}
+                    </td>
 
                     <td className="px-6 py-3">
                       <span
                         className={`text-xs px-3 py-1 rounded-full font-medium ${
                           booking.status === "Completed"
-                            ? "bg-red-500 text-green-100"
-                            : "bg-green-500 text-red-100"
+                            ? "bg-green-100 text-green-700"
+                            : booking.status === "Pending"
+                            ? "bg-yellow-100 text-yellow-700"
+                            : "bg-red-100 text-red-700"
                         }`}
                       >
                         {booking.status}

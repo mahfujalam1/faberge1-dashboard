@@ -1,35 +1,21 @@
 import React from "react";
 import { MailOutlined, UserOutlined, MessageOutlined } from "@ant-design/icons";
-
-// 🔹 Mock contact messages JSON
-const contactMessages = [
-  {
-    id: 1,
-    name: "John Doe",
-    email: "john@example.com",
-    subject: "Issue with Booking",
-    message: "Hi, I’m facing issues while booking a manicure appointment.",
-    date: "2025-10-10",
-  },
-  {
-    id: 2,
-    name: "Sophia Allen",
-    email: "sophia@gmail.com",
-    subject: "Payment not received",
-    message: "I completed the payment but it’s not showing in my account.",
-    date: "2025-10-15",
-  },
-  {
-    id: 3,
-    name: "Michael Brown",
-    email: "michaelb@gmail.com",
-    subject: "Feedback on Service",
-    message: "Your nail art service was wonderful! Keep it up 💅",
-    date: "2025-10-18",
-  },
-];
+import { useGetAllMessagesQuery } from "../../redux/features/help-and-support/message";
 
 const HelpSupport = () => {
+  const { data } = useGetAllMessagesQuery();
+  const contactMessages = data?.data;
+
+  const formatDateTime = (dateString) => {
+    const date = new Date(dateString);
+    const formattedDate = date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+    return `${formattedDate}`;
+  };
+
   return (
     <div className="p-6 overflow-x-auto md:w-[420px] lg:w-[680px] xl:w-full">
       <h1 className="text-xl font-semibold text-gray-800 mb-4">
@@ -48,14 +34,18 @@ const HelpSupport = () => {
             </tr>
           </thead>
           <tbody>
-            {contactMessages.map((msg) => (
+            {contactMessages?.map((msg) => (
               <tr
-                key={msg.id}
-                className="border-b border-pink-100 hover:bg-pink-50 transition-all"
+                key={msg._id}
+                className={`${
+                  msg?.isRead === true
+                    ? "border-b border-pink-100 hover:bg-pink-50 transition-all"
+                    : "bg-pink-100 font-bold shadow-lg"
+                }`}
               >
                 <td className="px-6 py-3 flex items-center gap-2">
                   <UserOutlined className="text-[#e91e63]" />
-                  <span>{msg.name}</span>
+                  <span>{msg.firstName}</span>
                 </td>
 
                 <td className="px-6 py-3">
@@ -69,7 +59,7 @@ const HelpSupport = () => {
                   </a>
                 </td>
 
-                <td className="px-6 py-3">{msg.subject}</td>
+                <td className="px-6 py-3">This is subject line.</td>
 
                 <td className="px-6 py-3 flex items-start gap-2">
                   <MessageOutlined className="text-gray-400 mt-[2px]" />
@@ -78,7 +68,9 @@ const HelpSupport = () => {
                   </p>
                 </td>
 
-                <td className="px-6 py-3 text-gray-500">{msg.date}</td>
+                <td className="px-6 py-3 text-gray-500">
+                  {formatDateTime(msg.createdAt)}
+                </td>
               </tr>
             ))}
           </tbody>

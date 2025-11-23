@@ -1,4 +1,4 @@
-import React from "react";
+
 import { CloseOutlined } from "@ant-design/icons";
 
 const UserDetailsModal = ({ isOpen, user, type, onClose, onAction }) => {

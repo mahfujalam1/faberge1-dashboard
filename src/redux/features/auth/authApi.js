@@ -24,7 +24,14 @@ const authApi = baseApi.injectEndpoints({
     }),
     forgotPassword: builder.mutation({
       query: (data) => ({
-        url: "/auth/forgot-password",
+        url: "/manager/forgot-password",
+        method: "POST",
+        body: data,
+      }),
+    }),
+    verifyOtp: builder.mutation({
+      query: (data) => ({
+        url: "/manager/verify-otp",
         method: "POST",
         body: data,
       }),
@@ -38,7 +45,7 @@ const authApi = baseApi.injectEndpoints({
     }),
     resetPassword: builder.mutation({
       query: (data) => ({
-        url: "/auth/reset-password",
+        url: "/manager/set-new-password",
         method: "POST",
         body: data,
       }),
@@ -53,4 +60,5 @@ export const {
   useForgotPasswordMutation,
   useVerifyEmailMutation,
   useResetPasswordMutation,
+  useVerifyOtpMutation,
 } = authApi;

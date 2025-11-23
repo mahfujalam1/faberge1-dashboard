@@ -1,11 +1,13 @@
 import React, { useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useVerifyOtpMutation } from "../../../redux/features/auth/authApi";
 
 const OtpVerify = () => {
   const { email } = useParams();
-  const [otp, setOtp] = useState(["", "", "", ""]);
+  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const inputsRef = useRef([]);
   const navigate = useNavigate();
+  const [verifyOTP] = useVerifyOtpMutation()
 
   // handle otp input
   const handleChange = (value, index) => {
@@ -28,14 +30,14 @@ const OtpVerify = () => {
     }
   };
 
-  const handleVerify = (e) => {
+  const handleVerify =async (e) => {
     e.preventDefault();
     const code = otp.join("");
-    if (code.length === 4) {
-      console.log("✅ OTP Verified for:", email, "→ Code:", code);
+    if (code.length === 6) {
+      await verifyOTP({email, code})
       navigate(`/auth/new-password/${encodeURIComponent(email)}`);
     } else {
-      alert("Please enter all 4 digits!");
+      alert("Please enter all 6 digits!");
     }
   };
 

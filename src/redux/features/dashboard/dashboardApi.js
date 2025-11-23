@@ -1,4 +1,5 @@
 import { baseApi } from "../../baseApi/baseApi";
+import { tagTypes } from "../../tagTypes";
 
 const dashboardApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -16,7 +17,19 @@ const dashboardApi = baseApi.injectEndpoints({
       }),
       transformResponse: (response) => response?.data?.attributes,
     }),
+
+    getUpcomingBookings: builder.query({
+      query: () => ({
+        url: `/booking/get-all-bookings?page=1&limit=5&status=booked`,
+        method: "GET",
+      }),
+      providesTags: [tagTypes.bookings],
+    }),
   }),
 });
 
-export const { useGetDashboardStatusQuery, useGetIncomeRatioQuery } = dashboardApi;
+export const {
+  useGetDashboardStatusQuery,
+  useGetIncomeRatioQuery,
+  useGetUpcomingBookingsQuery,
+} = dashboardApi;

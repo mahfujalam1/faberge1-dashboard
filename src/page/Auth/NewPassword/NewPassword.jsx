@@ -1,19 +1,19 @@
 import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { EyeInvisibleOutlined, EyeTwoTone } from "@ant-design/icons";
+import { useResetPasswordMutation } from "../../../redux/features/auth/authApi";
 
 const NewPassword = () => {
   const { email } = useParams();
   const navigate = useNavigate();
+  const [resetPassword] = useResetPasswordMutation()
 
   const [passwords, setPasswords] = useState({
-    current: "",
     new: "",
     confirm: "",
   });
 
   const [visible, setVisible] = useState({
-    current: false,
     new: false,
     confirm: false,
   });

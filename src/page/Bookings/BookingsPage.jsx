@@ -33,7 +33,6 @@ const BookingsPage = () => {
 
   // Format services display
   const formatServices = (services) => {
-    console.log(services)
     if (!services || services.length === 0) return "N/A";
 
     return services

@@ -1,19 +1,33 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useForgotPasswordMutation } from "../../../redux/features/auth/authApi";
+import { toast } from "sonner";
 
 const ForgotPassword = () => {
+  const [forgotPassword] = useForgotPasswordMutation();
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!email) {
-      setError("Email is Required");
-      return;
+    try {
+      if (!email) {
+        setError("Email is Required");
+        return;
+      }
+      const res = await forgotPassword({email});
+      console.log(res)
+      
+      if(res.data){
+        toast.success(res?.data?.message)
+        navigate(`/auth/otp/${encodeURIComponent(email)}`);
+      }else if(res?.error){
+        toast.error(res?.error?.data?.message)
+      }
+    } catch (err) {
+      console.log(err);
     }
-    console.log("Email Sent:", email);
-    navigate(`/auth/otp/${encodeURIComponent(email)}`);
   };
 
   return (

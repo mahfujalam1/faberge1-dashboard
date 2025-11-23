@@ -1,36 +1,25 @@
 import { baseApi } from "../../baseApi/baseApi";
 import { tagTypes } from "../../tagTypes";
 
-const profileApi = baseApi.injectEndpoints({
+const termsApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getMyProfile: builder.query({
+    getTermsCondition: builder.query({
       query: () => ({
-        url: "/manager/me",
+        url: "/public/get-terms-and-conditions",
         method: "GET",
       }),
-      providesTags: [tagTypes.users],
+      providesTags: [tagTypes.termsCondition],
     }),
-    updateUser: builder.mutation({
+    updateTermsCondition: builder.mutation({
       query: (data) => ({
-        url: "/manager/update-profile",
+        url: "/public/create-or-update-terms-and-conditions",
         method: "PATCH",
         body: data,
       }),
-      invalidatesTags: [tagTypes.users],
-    }),
-    changePassword: builder.mutation({
-      query: (data) => ({
-        url: "/manager/change-password",
-        method: "POST",
-        body: data,
-      }),
-      invalidatesTags: [tagTypes.users],
+      invalidatesTags: [tagTypes.termsCondition],
     }),
   }),
 });
 
-export const {
-  useGetMyProfileQuery,
-  useUpdateUserMutation,
-  useChangePasswordMutation,
-} = profileApi;
+export const { useGetTermsConditionQuery, useUpdateTermsConditionMutation } =
+  termsApi;

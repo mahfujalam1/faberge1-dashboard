@@ -13,6 +13,7 @@ export const tagTypes = {
   privacy: "privacy",
   termsCondition: "termsCondition",
   helpSupport: "helpSupport",
+  siteContent: "siteContent",
 };
 
 export const tagTypesList = [
@@ -30,4 +31,5 @@ export const tagTypesList = [
   tagTypes.profile,
   tagTypes.termsCondition,
   tagTypes.users,
+  tagTypes.siteContent,
 ];

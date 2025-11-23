@@ -1,28 +1,62 @@
 import { IoChevronBack } from "react-icons/io5";
 import { Link } from "react-router-dom";
 import { Button, Form } from "antd";
-import ReactQuill from "react-quill"; // Import React Quill
-import "react-quill/dist/quill.snow.css"; // Import Quill styles
-import { useState } from "react";
+import ReactQuill from "react-quill";
+import "react-quill/dist/quill.snow.css";
+import { useState, useEffect } from "react";
 import CustomButton from "../../utils/CustomButton";
+import {
+  useGetAboutUsQuery,
+  useUpdateAboutUsMutation,
+} from "../../redux/features/site-content/site-content";
+import { toast } from "sonner";
 
 const EditAboutUs = () => {
   const [form] = Form.useForm();
-  const [content, setContent] = useState(
-    "<p>Enter your 'About Us' content here.</p>"
-  ); // Default content for the About Us section
+  const [content, setContent] = useState("");
 
-  const handleSubmit = () => {
-    console.log("Updated About Us Content:", content);
-    // Handle form submission, e.g., update the about us section in the backend
+  const { data, isLoading } = useGetAboutUsQuery();
+  const aboutUsData = data?.aboutUs;
+
+  const [updateAboutUs, { isLoading: isUpdating }] = useUpdateAboutUsMutation();
+
+  // Set initial content when data loads
+  useEffect(() => {
+    if (aboutUsData) {
+      setContent(aboutUsData);
+      form.setFieldsValue({ content: aboutUsData });
+    }
+  }, [aboutUsData, form]);
+
+  const handleSubmit = async () => {
+    try {
+      const res = await updateAboutUs({ aboutUs: content }).unwrap();
+      toast.success(res?.message);
+    } catch (error) {
+      console.log(error)
+      console.error("Error:", error);
+      // Error message show korar jonno notification add korte paro
+    }
   };
 
+  const handleCancel = () => {
+    // Reset to original data
+    if (aboutUsData) {
+      setContent(aboutUsData);
+      form.setFieldsValue({ content: aboutUsData });
+    }
+  };
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
   return (
-    <section className="w-full h-full min-h-screen ">
+    <section className="w-full h-full min-h-screen">
       {/* Header Section */}
       <div className="flex justify-between items-center py-5">
-        <div className="flex items-center">
-          <Link to="/site-content/about-us">
+        <div className="flex items-center gap-2">
+          <Link to="/site-content">
             <IoChevronBack className="text-2xl" />
           </Link>
           <h1 className="text-2xl font-semibold">Edit About Us</h1>
@@ -33,41 +67,47 @@ const EditAboutUs = () => {
       <div className="w-full p-6 rounded-lg shadow-md bg-white">
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
           {/* React Quill for About Us Content */}
-          <Form.Item name="content" initialValue={content}>
+          <Form.Item name="content">
             <ReactQuill
               value={content}
-              onChange={(value) => setContent(value)}
+              onChange={setContent}
               modules={{
                 toolbar: [
-                  [{ header: [1, 2, 3, 4, 5, 6, false] }], // Header dropdown
-                  [{ font: [] }], // Font options
-                  [{ list: "ordered" }, { list: "bullet" }], // Ordered and bullet lists
-                  ["bold", "italic", "underline", "strike"], // Formatting options
-                  [{ align: [] }], // Text alignment
-                  [{ color: [] }, { background: [] }], // Color and background
-                  ["blockquote", "code-block"], // Blockquote and code block
-                  ["link", "image", "video"], // Link, image, and video upload
-                  [{ script: "sub" }, { script: "super" }], // Subscript and superscript
-                  [{ indent: "-1" }, { indent: "+1" }], // Indent
-                  ["clean"], // Remove formatting
+                  [{ header: [1, 2, 3, 4, 5, 6, false] }],
+                  [{ font: [] }],
+                  [{ list: "ordered" }, { list: "bullet" }],
+                  ["bold", "italic", "underline", "strike"],
+                  [{ align: [] }],
+                  [{ color: [] }, { background: [] }],
+                  ["blockquote", "code-block"],
+                  ["link", "image", "video"],
+                  [{ script: "sub" }, { script: "super" }],
+                  [{ indent: "-1" }, { indent: "+1" }],
+                  ["clean"],
                 ],
               }}
-              style={{ height: "300px" }} // Set the increased height
+              style={{ height: "300px" }}
             />
           </Form.Item>
 
           {/* Update Button */}
-            <div className="w-full flex justify-end mt-20 md:mt-16">
+          <div className="w-full flex justify-end gap-3 mt-20 md:mt-16">
             <Button
-              type="primary"
-              htmlType="submit"
-              icon={<i className="fas fa-sync-alt"></i>} // Example FontAwesome icon
-              className="mt-1 px-5 rounded-lg bg-gray-500 py-5  border-none"
+              type="default"
+              onClick={handleCancel}
+              disabled={isUpdating}
+              className="px-5 rounded-lg py-5"
             >
-              Cancel 
+              Cancel
             </Button>
-            <CustomButton className="p-1" >Update</CustomButton>
-            </div>
+            <CustomButton
+              className="p-1"
+              htmlType="submit"
+              loading={isUpdating}
+            >
+              Update
+            </CustomButton>
+          </div>
         </Form>
       </div>
     </section>

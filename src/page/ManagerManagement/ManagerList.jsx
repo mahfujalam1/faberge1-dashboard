@@ -1,7 +1,7 @@
 import React from "react";
 import { DeleteOutlined, LockOutlined } from "@ant-design/icons";
 
-const ManagerList = ({ managers, onDelete, onOpenAccess }) => {
+const ManagerList = ({ onDelete, onOpenAccess, managers }) => {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-pink-100 p-4">
       <div className="mb-4">
@@ -26,16 +26,19 @@ const ManagerList = ({ managers, onDelete, onOpenAccess }) => {
           </thead>
 
           <tbody>
-            {managers.length > 0 ? (
-              managers.map((manager) => (
+            {managers?.length > 0 ? (
+              managers?.map((manager) => (
                 <tr
                   key={manager.id}
                   className="border-b border-pink-100 hover:bg-pink-50 transition-all"
                 >
                   <td className="px-6 py-3 flex items-center gap-3">
                     <img
-                      src={manager.avatar}
-                      alt={manager.name}
+                      src={
+                        manager?.uploadPhoto ||
+                        "https://avatar.iran.liara.run/public/job/police/male"
+                      }
+                      alt={manager?.firstName}
                       className="w-9 h-9 rounded-full object-cover"
                     />
                     <span className="text-[#e91e63] font-medium cursor-pointer hover:underline">
@@ -51,12 +54,12 @@ const ManagerList = ({ managers, onDelete, onOpenAccess }) => {
                   <td className="px-6 py-3">
                     <span
                       className={`text-xs px-3 py-1 rounded-full font-semibold ${
-                        manager.status === "active"
+                        manager?.isBlocked === false
                           ? "bg-green-100 text-green-700"
-                          : "bg-gray-100 text-gray-500"
+                          : "bg-red-100 text-red-700"
                       }`}
                     >
-                      {manager.status}
+                      {manager?.isBlocked ? "Blocked" : "Active"}
                     </span>
                   </td>
 
@@ -69,10 +72,13 @@ const ManagerList = ({ managers, onDelete, onOpenAccess }) => {
                   </td>
 
                   <td className="px-6 py-3 text-right">
-                    <DeleteOutlined
-                      className="text-red-500 cursor-pointer hover:text-red-600 text-lg"
-                      onClick={() => onDelete(manager.id)}
-                    />
+                    {/* Block/Unblock Button */}
+                    <button
+                      onClick={() => onDelete(manager?._id)} // Pass the manager's ID to the onDelete function
+                      className="bg-[#e91e63] text-white px-3 py-1 rounded-md shadow hover:bg-[#d81b60] transition-all"
+                    >
+                      {manager?.isBlocked ? "Unblock" : "Block"}
+                    </button>
                   </td>
                 </tr>
               ))

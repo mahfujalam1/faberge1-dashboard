@@ -1,102 +1,69 @@
 import React, { useState } from "react";
 import ManagerList from "./ManagerList";
-import ConfirmationModal from "../../component/ui/Modals/ConfirmationModal";
 import AccessModal from "../../component/ui/Modals/AccessModal";
 import CreateManagerModal from "../../component/ui/Modals/CreateManagerModal";
+import {
+  useGetAllManagersQuery,
+  useCreateManagerMutation,
+  useUpdateManagerAccessMutation,
+  useDeleteManagerMutation,
+} from "../../redux/features/superAdmin/super-admin";
 
 const ManagerManagement = () => {
-  const [deleteId, setDeleteId] = useState(null);
   const [selectedManager, setSelectedManager] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
-  const [managers, setManagers] = useState([
-    {
-      id: 1,
-      name: "John S.",
-      email: "example@gmail.com",
-      managerId: "458 56 94",
-      avatar: "https://randomuser.me/api/portraits/women/44.jpg",
-      status: "active",
-      access: {
-        dashboard: true,
-        analytics: false,
-        users: false,
-        services: false,
-        bookings: false,
-        transaction: false,
-      },
-    },
-    {
-      id: 2,
-      name: "Alice M.",
-      email: "alice@gmail.com",
-      managerId: "123 45 67",
-      avatar: "https://randomuser.me/api/portraits/women/45.jpg",
-      status: "active",
-      access: {
-        dashboard: false,
-        analytics: true,
-        users: false,
-        services: false,
-        bookings: true,
-        transaction: false,
-      },
-    },
-  ]);
+  // Fetch all managers from the backend
+  const { data, isLoading, isError } = useGetAllManagersQuery();
+  const managers = data?.data;
+
+  // Hooks for mutation
+  const [createManager] = useCreateManagerMutation();
+  const [updateManagerAccess] = useUpdateManagerAccessMutation();
+  const [deleteManager] = useDeleteManagerMutation();
 
   // 🗑️ Delete Manager
-  const handleDelete = (id) => setDeleteId(id);
-  const confirmDelete = () => {
-    setManagers(managers.filter((m) => m.id !== deleteId));
-    setDeleteId(null);
+  const handleDeleteManager = async (managerId) => {
+    try {
+      await deleteManager(managerId); // Delete manager via RTK Query API
+    } catch (error) {
+      console.error("Failed to delete manager", error);
+    }
   };
-  const cancelDelete = () => setDeleteId(null);
 
   // 🔐 Access Modal
   const handleOpenAccess = (manager) => setSelectedManager(manager);
   const handleCloseAccess = () => setSelectedManager(null);
 
   // ⚙️ Toggle access
-  const handleToggleAccess = (managerId, moduleName, value) => {
-    const updatedManagers = managers.map((m) =>
-      m.id === managerId
-        ? { ...m, access: { ...m.access, [moduleName]: value } }
-        : m
-    );
-    setManagers(updatedManagers);
-
-    if (selectedManager?.id === managerId) {
-      setSelectedManager(
-        updatedManagers.find((m) => m.id === selectedManager.id)
-      );
+  const handleToggleAccess = async (managerId, moduleName, value) => {
+    try {
+      await updateManagerAccess({
+        managerId,
+        accessData: { [moduleName]: value },
+      });
+      // If access updated successfully, update UI accordingly
+      setSelectedManager((prev) => ({
+        ...prev,
+        access: { ...prev.access, [moduleName]: value },
+      }));
+    } catch (error) {
+      console.error("Failed to update access", error);
     }
   };
 
   // ➕ Add new manager
-  const handleAddManager = (newManagerData) => {
-    const newManager = {
-      id: managers.length + 1,
-      name: newManagerData.name,
-      email: newManagerData.email,
-      managerId: newManagerData.managerId,
-      avatar:
-        newManagerData.profileImage instanceof File
-          ? URL.createObjectURL(newManagerData.profileImage)
-          : "https://randomuser.me/api/portraits/men/50.jpg",
-      status: "active",
-      access: {
-        dashboard: false,
-        analytics: false,
-        users: false,
-        services: false,
-        bookings: false,
-        transaction: false,
-      },
-    };
-
-    setManagers([...managers, newManager]);
-    setShowCreateModal(false);
+  const handleAddManager = async (newManagerData) => {
+    try {
+      await createManager(newManagerData); // Create manager via RTK Query API
+      setShowCreateModal(false); // Close modal after creation
+    } catch (error) {
+      console.error("Failed to create manager", error);
+    }
   };
+
+  if (isLoading) return <div>Loading...</div>;
+  if (isError) return <div>Error loading managers</div>;
 
   return (
     <div className="p-6 min-h-screen overflow-x-auto md:w-[420px] lg:w-[680px] xl:w-full">
@@ -113,19 +80,8 @@ const ManagerManagement = () => {
 
       <ManagerList
         managers={managers}
-        onDelete={handleDelete}
+        onDelete={handleDeleteManager} // Directly delete when button is clicked
         onOpenAccess={handleOpenAccess}
-      />
-
-      {/* 🗑️ Delete Confirmation */}
-      <ConfirmationModal
-        isOpen={!!deleteId}
-        title="Delete Manager"
-        message="Are you sure you want to delete this manager?"
-        confirmText="Yes, Delete"
-        cancelText="Cancel"
-        onConfirm={confirmDelete}
-        onCancel={cancelDelete}
       />
 
       {/* 🔐 Access Modal */}

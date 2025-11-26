@@ -19,7 +19,7 @@ const CreateWorkerModal = ({ isOpen, onClose }) => {
     address: "",
     city: "",
     state: "",
-    zip: "",
+    zipCode: "",
     title: "",
     workerId: "",
     phone: "",
@@ -165,7 +165,7 @@ const CreateWorkerModal = ({ isOpen, onClose }) => {
             .replace(/^./, (s) => s.toUpperCase());
 
           if (key === "workerId") placeholder = "Worker ID#";
-          if (key === "zip") placeholder = "Zip Code";
+          if (key === "zipCode") placeholder = "zip Code";
 
           return (
             <div key={key} className="col-span-1">

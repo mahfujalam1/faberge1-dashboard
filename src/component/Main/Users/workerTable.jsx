@@ -5,21 +5,17 @@ import { useGetAllWorkersQuery } from "../../../redux/features/worker/worker";
 import UserDetailsModal from "../../ui/Modals/UserDetailsModal";
 
 const WorkerTable = () => {
-  const { data } = useGetAllWorkersQuery();
-  const workerData = data?.data;
-
   const [searchValue, setSearchValue] = useState("");
-  const [openModal, setOpenModal] = useState(false)
-  const [detailsData, setDetailsData] = useState({})
+  const [openModal, setOpenModal] = useState(false);
+  const [detailsData, setDetailsData] = useState({});
+  const { data } = useGetAllWorkersQuery(searchValue);
+  const filteredData = data?.data;
 
-  const filteredData = workerData?.filter((user) =>
-    user.firstName?.toLowerCase().includes(searchValue.toLowerCase())
-  );
 
-  const handleViewWorker=(data)=>{
-    setOpenModal(true)
-    setDetailsData(data)
-  }
+  const handleViewWorker = (data) => {
+    setOpenModal(true);
+    setDetailsData(data);
+  };
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-pink-100 mt-4">
@@ -43,7 +39,7 @@ const WorkerTable = () => {
               <th className="px-6 py-3 w-[160px]">Location</th>
               <th className="px-6 py-3 w-[240px]">Services</th>
               <th className="px-6 py-3 w-[120px]">Status</th>
-              <th className="px-6 py-3 text-right w-[100px]">Actions</th>
+              <th className="px-6 py-3 text-center w-[100px]">Actions</th>
             </tr>
           </thead>
 
@@ -58,8 +54,10 @@ const WorkerTable = () => {
                   <td className="px-6 py-3 flex items-center gap-3 w-[200px] shrink-0">
                     <img
                       src={
-                        user?.uploadPhoto ||
-                        "https://avatar.iran.liara.run/public/20"
+                        user.uploadPhoto &&
+                        user.uploadPhoto === "http://10.10.20.16:5137undefined" 
+                          ? "https://avatar.iran.liara.run/public/39"
+                          : user.uploadPhoto
                       }
                       alt={user.firstName}
                       className="w-9 h-9 rounded-full object-cover"
@@ -68,35 +66,33 @@ const WorkerTable = () => {
                       className="text-[#e91e63] font-medium cursor-pointer hover:underline"
                       onClick={() => onView(user)}
                     >
-                      {user.name}
+                      {user.firstName}
                     </span>
                   </td>
 
-                  <td className="px-6 py-3 w-[120px]">Nail Tech</td>
+                  <td className="px-6 py-3 w-[120px]">
+                    {user?.title || "Title"}
+                  </td>
                   <td className="px-6 py-3 w-[120px]">{user.workerId}</td>
                   <td className="px-6 py-3 w-[160px]">{user.address}</td>
                   <td className="px-6 py-3 w-[240px]">
                     {user.services?.map((service) => (
                       <ul key={service?._id}>
-                        <li>service</li>
+                        <li>{service?.service?.serviceName}</li>
                       </ul>
                     ))}
                   </td>
                   <td className="px-6 py-3 w-[120px]">
                     <span className="bg-green-100 text-green-700 text-xs px-3 py-1 rounded-full">
-                      active
+                      {user?.isBlocked ? "Blocked" : "Active"}
                     </span>
                   </td>
 
                   {/* Actions */}
-                  <td className="px-6 py-3 text-right flex justify-end gap-4 text-[#e91e63]">
+                  <td className="px-6 py-3 text-right flex justify-center gap-4 text-[#e91e63]">
                     <EyeOutlined
                       className="cursor-pointer hover:text-pink-500 text-lg"
                       onClick={() => handleViewWorker(user)}
-                    />
-                    <DeleteOutlined
-                      className="cursor-pointer hover:text-red-500 text-lg"
-                      onClick={() => onDelete(user)}
                     />
                   </td>
                 </tr>

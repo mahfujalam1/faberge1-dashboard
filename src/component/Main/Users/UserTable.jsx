@@ -5,15 +5,16 @@ import { useGetAllUsersQuery } from "../../../redux/features/user/userApi";
 import UserDetailsModal from "../../ui/Modals/UserDetailsModal";
 
 const UserTable = () => {
-  const { data } = useGetAllUsersQuery({ page: 1, limit: 10, sortBy: null });
-  const userData = data?.data;
   const [searchValue, setSearchValue] = useState("");
   const [openModal, setOpenModal] = useState(false);
   const [detailsData, setDetailsData] = useState({});
-
-  const filteredData = userData?.filter((user) =>
-    user.firstName.toLowerCase().includes(searchValue.toLowerCase())
-  );
+  const { data } = useGetAllUsersQuery({
+    page: 1,
+    limit: 10,
+    sortBy: null,
+    searchTerm: searchValue,
+  });
+  const filteredData = data?.data;
 
   const handleViewCustomer = (data) => {
     setOpenModal(true);
@@ -40,7 +41,7 @@ const UserTable = () => {
               <th className="px-6 py-3 w-[160px]">Location</th>
               <th className="px-6 py-3 w-[240px]">Email</th>
               <th className="px-6 py-3 w-[160px]">Phone</th>
-              <th className="px-6 py-3 text-right w-[100px]">Actions</th>
+              <th className="px-6 py-3 text-center w-[100px]">Actions</th>
             </tr>
           </thead>
 
@@ -74,14 +75,10 @@ const UserTable = () => {
                   <td className="px-6 py-3 w-[160px]">{user.phone}</td>
 
                   {/* Actions */}
-                  <td className="px-6 py-3 text-right flex justify-end gap-4 text-[#e91e63]">
+                  <td className="px-6 py-3 text-right flex justify-center gap-4 text-[#e91e63]">
                     <EyeOutlined
                       className="cursor-pointer hover:text-pink-500 text-lg"
                       onClick={() => handleViewCustomer(user)}
-                    />
-                    <DeleteOutlined
-                      className="cursor-pointer hover:text-red-500 text-lg"
-                      // onClick={() => onDelete(user)}
                     />
                   </td>
                 </tr>

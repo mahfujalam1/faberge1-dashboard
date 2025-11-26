@@ -4,19 +4,18 @@ import { tagTypes } from "../../tagTypes";
 const workerApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getAllWorkers: builder.query({
-      query: () => ({
-        url: "/worker/get-all-worker",
+      query: (searchTerm) => ({
+        url: `/worker/get-all-worker?search=${searchTerm}`,
         method: "GET",
       }),
       providesTags: [tagTypes.workers],
     }),
-    deleteWorker: builder.mutation({
-      query: (data) => ({
-        url: "/manager/update-profile",
-        method: "PATCH",
-        body: data,
+    getSingleWorker: builder.query({
+      query: (id) => ({
+        url: `/worker/get-one-worker/${id}`,
+        method: "GET",
       }),
-      invalidatesTags: [tagTypes.workers],
+      providesTags: [tagTypes.workers],
     }),
     createWorker: builder.mutation({
       query: (data) => ({
@@ -31,6 +30,6 @@ const workerApi = baseApi.injectEndpoints({
 
 export const {
   useGetAllWorkersQuery,
-  useDeleteWorkerMutation,
+  useGetSingleWorkerQuery,
   useCreateWorkerMutation,
 } = workerApi;

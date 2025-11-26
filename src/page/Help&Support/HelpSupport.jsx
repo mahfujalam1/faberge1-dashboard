@@ -59,7 +59,7 @@ const HelpSupport = () => {
                   </a>
                 </td>
 
-                <td className="px-6 py-3">This is subject line.</td>
+                <td className="px-6 py-3">{msg.subject || "this is subject"}</td>
 
                 <td className="px-6 py-3 flex items-start gap-2">
                   <MessageOutlined className="text-gray-400 mt-[2px]" />

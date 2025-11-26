@@ -8,8 +8,8 @@ import { useGetAllBookingsQuery } from "../../redux/features/booking/booking";
 const BookingsPage = () => {
   const { data } = useGetAllBookingsQuery({ page: 1, limit: 10, status: "" });
   const bookings = data?.data;
+  console.log(bookings)
   const [searchValue, setSearchValue] = useState("");
-  const [deleteId, setDeleteId] = useState(null);
   const [selectedBooking, setSelectedBooking] = useState(null);
 
   const filteredBookings = bookings?.filter((b) =>
@@ -52,9 +52,7 @@ const BookingsPage = () => {
     setSelectedBooking(booking);
   };
 
-  const handleDelete = (id) => {
-    setDeleteId(id);
-  };
+
 
   const confirmDelete = () => {
     // setBookings(bookings.filter((b) => b.id !== deleteId));
@@ -89,7 +87,7 @@ const BookingsPage = () => {
                 <th className="px-6 py-3 w-[250px]">Service</th>
                 <th className="px-6 py-3 w-[180px]">Date & Time</th>
                 <th className="px-6 py-3 w-[120px]">Status</th>
-                <th className="px-6 py-3 text-right w-[100px]">Actions</th>
+                <th className="px-6 py-3 text-center w-[100px]">Actions</th>
               </tr>
             </thead>
 
@@ -126,7 +124,7 @@ const BookingsPage = () => {
                             booking?.worker?.lastName}
                         </p>
                         <p className="text-xs text-gray-500">
-                          {booking.worker?._id}
+                          {booking.worker?.workerId}
                         </p>
                       </div>
                     </td>
@@ -156,14 +154,10 @@ const BookingsPage = () => {
                     </td>
 
                     <td className="px-6 py-3 text-right text-[#e91e63]">
-                      <div className="flex justify-end gap-4">
+                      <div className="flex justify-center gap-4">
                         <EyeOutlined
                           className="cursor-pointer hover:text-pink-500 text-lg"
                           onClick={() => handleView(booking)}
-                        />
-                        <DeleteOutlined
-                          className="cursor-pointer hover:text-red-500 text-lg"
-                          onClick={() => handleDelete(booking.id)}
                         />
                       </div>
                     </td>
@@ -183,16 +177,6 @@ const BookingsPage = () => {
           </table>
         </div>
 
-        {/* 🗑️ Delete Modal */}
-        <ConfirmationModal
-          isOpen={!!deleteId}
-          title="Delete Booking"
-          message="Are you sure you want to delete this booking?"
-          confirmText="Yes, Delete"
-          cancelText="Cancel"
-          onConfirm={confirmDelete}
-          onCancel={cancelDelete}
-        />
 
         {/* 👁️ View Details Modal */}
         <BookingDetailsModal

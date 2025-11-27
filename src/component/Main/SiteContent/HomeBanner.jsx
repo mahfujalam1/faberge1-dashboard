@@ -1,12 +1,24 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { MdOutlineCloudUpload } from "react-icons/md";
 import { message } from "antd";
+import {
+  useCreateServiceMutation,
+  useGetDynamicBannerQuery,
+} from "../../../redux/features/site-content/site-content";
+import { toast } from "sonner";
 
 const HomeBanner = ({ onClose }) => {
   const [bannerFile, setBannerFile] = useState(null);
   const [preview, setPreview] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef(null);
+  const { data } = useGetDynamicBannerQuery();
+  const bannerData = data?.data;
+
+  // Check if Home banner exists
+  const homeBanner = bannerData?.find(
+    (item) => item.title.toLowerCase() === "home"
+  );
 
   const handleFileClick = () => fileInputRef.current.click();
 
@@ -29,20 +41,13 @@ const HomeBanner = ({ onClose }) => {
 
     try {
       const formData = new FormData();
-      formData.append("file", bannerFile);
+      formData.append("title", "Home"); // Set default title to Home
+      formData.append("dynamicUpload", bannerFile);
 
-      // API call korte hobe ekhane
-      // const response = await fetch('/api/upload-banner', {
-      //   method: 'POST',
-      //   body: formData
-      // });
+      const response = await createService(formData);
+      toast.success(response?.data?.message);
 
-      console.log("✅ Home Banner FormData:", formData);
-      console.log("✅ File:", bannerFile);
-
-      message.success("Banner uploaded successfully!");
-
-      // Reset state
+      // Reset state after upload
       setBannerFile(null);
       setPreview(null);
       if (onClose) onClose();
@@ -54,29 +59,40 @@ const HomeBanner = ({ onClose }) => {
     }
   };
 
+  // Function to render Home banner preview (image/video)
+  const getHomeBannerPreview = () => {
+    if (homeBanner) {
+      if (homeBanner.video) {
+        return (
+          <video src={homeBanner.video} controls className="h-40 rounded-lg" />
+        );
+      } else if (homeBanner.image) {
+        return (
+          <img
+            src={homeBanner.image}
+            alt="Preview"
+            className="h-40 rounded-lg object-cover"
+          />
+        );
+      }
+    }
+    return null;
+  };
+
   return (
     <div className="bg-white p-6 border border-pink-100 rounded-lg mb-4 shadow-sm">
-      <p className="text-gray-600 mb-3">Upload Image or Video</p>
+      <p className="text-gray-600 mb-3">
+        Upload Image or Video for Home Banner
+      </p>
+
       <div
         onClick={handleFileClick}
         className="border-2 border-dashed border-pink-200 rounded-lg h-48 flex flex-col items-center justify-center cursor-pointer hover:bg-pink-50 transition-all"
       >
-        {preview ? (
-          bannerFile?.type?.startsWith("video/") ? (
-            <video src={preview} controls className="h-40 rounded-lg" />
-          ) : (
-            <img
-              src={preview}
-              alt="Preview"
-              className="h-40 rounded-lg object-cover"
-            />
-          )
-        ) : (
+        {getHomeBannerPreview() || (
           <>
             <MdOutlineCloudUpload className="text-3xl text-[#e91e63] mb-2" />
-            <p className="text-sm text-gray-500">
-              Click to upload image or video
-            </p>
+            <p className="text-sm text-gray-500">Click to upload Home banner</p>
           </>
         )}
       </div>
@@ -101,7 +117,7 @@ const HomeBanner = ({ onClose }) => {
           disabled={isUploading || !bannerFile}
           className="bg-[#e91e63] hover:bg-[#d81b60] text-white px-4 py-2 rounded-md shadow transition-all disabled:bg-gray-300 disabled:cursor-not-allowed"
         >
-          {isUploading ? "Uploading..." : "Upload Banner"}
+          {isUploading ? "Uploading..." : "Upload Home Banner"}
         </button>
       </div>
     </div>

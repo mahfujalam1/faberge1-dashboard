@@ -9,9 +9,12 @@ import {
   FaUsers,
   FaCar,
   FaMoneyCheckAlt,
-} from "react-icons/fa"; // You can add your other icons here
+  FaTools, // Add new icons if necessary
+  FaQuestionCircle, // Add for Help and Support
+} from "react-icons/fa";
+import { toast } from "sonner";
 
-// Mapping module keys to labels and icons
+// Default module icons and labels
 const moduleMapping = {
   isDashboardShow: {
     label: "Dashboard",
@@ -32,6 +35,14 @@ const moduleMapping = {
   isTransactionsShow: {
     label: "Transactions",
     icon: <FaMoneyCheckAlt />,
+  },
+  isHelpAndSupport: {
+    label: "Help & Support",
+    icon: <FaQuestionCircle />,
+  },
+  isBookingManagement: {
+    label: "Booking Management",
+    icon: <FaTools />,
   },
 };
 
@@ -80,12 +91,14 @@ const AccessibilityList = ({ managers }) => {
     const data = { [moduleKey]: newValue };
 
     // Call the mutation to update the manager's access on the backend
-    updateManagerAccess({ managerId, data })
+    const res = updateManagerAccess({ managerId, data })
       .then((response) => {
         console.log("Access updated successfully:", response);
+        toast.success(response?.data?.message);
       })
       .catch((error) => {
         console.error("Failed to update access:", error);
+        toast.error("Failed to update accessibility");
 
         // Rollback the optimistic update if the request fails
         const rollbackManagers = managerData.map((manager) =>
@@ -110,33 +123,36 @@ const AccessibilityList = ({ managers }) => {
           const isActive = getManagerAccess(managerData[0], key); // Check if the module is enabled for the current manager
 
           return (
-            <div
-              key={key}
-              className="flex justify-between items-center py-3 px-4 hover:bg-pink-50 rounded-md transition-all"
-            >
-              <div className="flex items-center gap-3 text-gray-700">
-                <span className="text-lg text-[#e91e63]">{icon}</span>
-                <p className="font-medium">{label}</p>
-              </div>
+            // Render the module toggle only if the module exists in the manager's accessibility object
+            data?.data[key] !== undefined && (
+              <div
+                key={key}
+                className="flex justify-between items-center py-3 px-4 hover:bg-pink-50 rounded-md transition-all"
+              >
+                <div className="flex items-center gap-3 text-gray-700">
+                  <span className="text-lg text-[#e91e63]">{icon}</span>
+                  <p className="font-medium">{label}</p>
+                </div>
 
-              {/* Toggle */}
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={isActive}
-                  onChange={(e) =>
-                    handleToggleAccess(
-                      managerData[0]?._id,
-                      key,
-                      e.target.checked
-                    )
-                  } // Pass manager._id and the updated value
-                  className="sr-only peer"
-                />
-                <div className="w-10 h-5 bg-gray-300 rounded-full peer peer-checked:bg-[#e91e63] transition-all"></div>
-                <div className="absolute left-1 top-[3px] w-4 h-4 bg-white rounded-full peer-checked:translate-x-5 transition-transform"></div>
-              </label>
-            </div>
+                {/* Toggle */}
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={isActive}
+                    onChange={(e) =>
+                      handleToggleAccess(
+                        managerData[0]?._id,
+                        key,
+                        e.target.checked
+                      )
+                    } // Pass manager._id and the updated value
+                    className="sr-only peer"
+                  />
+                  <div className="w-10 h-5 bg-gray-300 rounded-full peer peer-checked:bg-[#e91e63] transition-all"></div>
+                  <div className="absolute left-1 top-[3px] w-4 h-4 bg-white rounded-full peer-checked:translate-x-5 transition-transform"></div>
+                </label>
+              </div>
+            )
           );
         })}
       </div>

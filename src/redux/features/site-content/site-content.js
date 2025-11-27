@@ -29,6 +29,14 @@ const siteContent = baseApi.injectEndpoints({
       }),
       invalidatesTags: [tagTypes.siteContent],
     }),
+
+    getDynamicBanner: builder.query({
+      query: () => ({
+        url: "/photo/get-all-dynamic-photo",
+        method: "GET",
+      }),
+      providesTags: [tagTypes.siteContent],
+    }),
   }),
 });
 
@@ -36,4 +44,5 @@ export const {
   useCreateServiceMutation,
   useGetAboutUsQuery,
   useUpdateAboutUsMutation,
+  useGetDynamicBannerQuery
 } = siteContent;

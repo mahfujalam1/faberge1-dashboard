@@ -1,39 +1,24 @@
-import React from "react";
-
-const mockTransactions = [
-  {
-    id: 1,
-    userName: "John S.",
-    avatar: "https://randomuser.me/api/portraits/men/45.jpg",
-    service: "Mani, Pedi, Water, Gel",
-    date: "10/10/2025",
-    paymentMethod: "Stripe",
-    amount: "$50",
-    transactionId: "TXN-845932",
-  },
-  {
-    id: 2,
-    userName: "Alice M.",
-    avatar: "https://randomuser.me/api/portraits/women/46.jpg",
-    service: "Pedicure, Gel",
-    date: "10/12/2025",
-    paymentMethod: "PayPal",
-    amount: "$60",
-    transactionId: "TXN-349502",
-  },
-  {
-    id: 3,
-    userName: "David R.",
-    avatar: "https://randomuser.me/api/portraits/men/47.jpg",
-    service: "Nail Art, Water",
-    date: "11/01/2025",
-    paymentMethod: "Card",
-    amount: "$40",
-    transactionId: "TXN-762394",
-  },
-];
+import { useGetAllTransactionsQuery } from "../../redux/features/booking/booking";
 
 const TransactionsPage = () => {
+  const { data } = useGetAllTransactionsQuery();
+  const mockTransactions = data?.transactions;
+  console.log(mockTransactions);
+
+  const formatDateTime = (dateString) => {
+    const date = new Date(dateString);
+    const formattedDate = date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+    const formattedTime = date.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    return `${formattedDate}, ${formattedTime}`;
+  };
+
   return (
     <div className="p-6 overflow-x-auto md:w-[420px] lg:w-[680px] xl:w-full">
       <h1 className="text-xl font-semibold text-gray-800 mb-4">Transactions</h1>
@@ -52,42 +37,56 @@ const TransactionsPage = () => {
           </thead>
 
           <tbody>
-            {mockTransactions.map((item) => (
+            {mockTransactions?.map((item) => (
               <tr
-                key={item.id}
+                key={item?._id}
                 className="border-b border-pink-100 hover:bg-pink-50 transition-all"
               >
                 {/* User Name */}
                 <td className="px-6 py-3 flex items-center gap-3">
                   <img
-                    src={item.avatar}
-                    alt={item.userName}
+                    src={
+                      item?.worker?.uploadPhoto &&
+                      item?.worker?.uploadPhoto ===
+                        "http://10.10.20.16:5137undefined"
+                        ? "https://avatar.iran.liara.run/public/39"
+                        : item?.worker?.uploadPhoto
+                    }
+                    alt={item?.worker?.firstName}
                     className="w-9 h-9 rounded-full object-cover"
                   />
                   <span className="text-[#e91e63] font-medium cursor-pointer hover:underline">
-                    {item.userName}
+                    {item?.worker?.firstName + " " + item?.worker?.lastName}
                   </span>
                 </td>
 
                 {/* Service */}
-                <td className="px-6 py-3 text-gray-700">{item.service}</td>
+                <td className="px-6 py-3 text-gray-700">
+                  {item?.services?.map((service) => (
+                    <ul key={service?.service?._id}>
+                      <li>{service?.service?.serviceName}</li>
+                    </ul>
+                  ))}
+                </td>
 
                 {/* Date */}
-                <td className="px-6 py-3 text-gray-600">{item.date}</td>
+                <td className="px-6 py-3 text-gray-600">
+                  {formatDateTime(item?.date)}
+                </td>
 
                 {/* Payment Method */}
                 <td className="px-6 py-3 text-gray-700">
-                  <span className="font-medium">{item.paymentMethod}</span>
+                  <span className="font-medium">Stripe</span>
                 </td>
 
                 {/* Amount */}
                 <td className="px-6 py-3 font-semibold text-gray-800">
-                  {item.amount}
+                  {item?.paymentAmount}
                 </td>
 
                 {/* Transaction ID */}
                 <td className="px-6 py-3 text-gray-600 font-mono">
-                  {item.transactionId}
+                  {item?.transactionId}
                 </td>
               </tr>
             ))}

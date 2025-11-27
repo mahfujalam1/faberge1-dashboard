@@ -1,16 +1,24 @@
 import { EyeOutlined, DeleteOutlined, SearchOutlined } from "@ant-design/icons";
-import { Input } from "antd";
+import { Input, Button } from "antd";
 import { useState } from "react";
 import BookingDetailsModal from "../../component/ui/Modals/BookingDetailsModal";
 import ConfirmationModal from "../../component/ui/Modals/ConfirmationModal";
 import { useGetAllBookingsQuery } from "../../redux/features/booking/booking";
 
 const BookingsPage = () => {
-  const { data } = useGetAllBookingsQuery({ page: 1, limit: 10, status: "" });
-  const bookings = data?.data;
-  console.log(bookings)
+  const [currentPage, setCurrentPage] = useState(1); // State to hold the current page
   const [searchValue, setSearchValue] = useState("");
   const [selectedBooking, setSelectedBooking] = useState(null);
+
+  // Fetch data based on current page and search value
+  const limit = 10
+  const { data, isLoading } = useGetAllBookingsQuery({
+    page: currentPage,
+    limit,
+    status: "",
+  });
+  const bookings = data?.data;
+  const pagination = data?.pagination;
 
   const filteredBookings = bookings?.filter((b) =>
     b.customer?.firstName.toLowerCase().includes(searchValue.toLowerCase())
@@ -52,22 +60,49 @@ const BookingsPage = () => {
     setSelectedBooking(booking);
   };
 
-
-
-  const confirmDelete = () => {
-    // setBookings(bookings.filter((b) => b.id !== deleteId));
-    setDeleteId(null);
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
   };
 
-  const cancelDelete = () => setDeleteId(null);
+  // Pagination logic
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (bookings?.length === limit) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const renderPageButtons = () => {
+    let buttons = [];
+    for (let i = 1; i <= pagination?.totalPages; i++) {
+      buttons.push(
+        <Button
+          key={i}
+          onClick={() => handlePageChange(i)}
+          className={`${
+            currentPage === i
+              ? "bg-pink-500 text-white"
+              : "bg-white text-pink-500 border-pink-500"
+          }`}
+        >
+          {i}
+        </Button>
+      );
+    }
+    return buttons;
+  };
 
   return (
     <div className="p-6 overflow-x-auto md:w-[420px] lg:w-[680px] xl:w-full">
       <h1 className="text-xl font-semibold text-gray-800 mb-4">All Bookings</h1>
 
       <div className="bg-white rounded-xl shadow-sm border border-pink-100 mt-4">
-        {/* 🔍 Search Bar */}
-        <div className="p-5 border-b border-pink-100">
+        {/* <div className="p-5 border-b border-pink-100">
           <Input
             placeholder="Search bookings..."
             prefix={<SearchOutlined className="text-[#e91e63]" />}
@@ -75,7 +110,7 @@ const BookingsPage = () => {
             onChange={(e) => setSearchValue(e.target.value)}
             className="border border-pink-200 rounded-md py-3 focus:border-[#e91e63] focus:shadow-md"
           />
-        </div>
+        </div> */}
 
         {/* 🧾 Table */}
         <div className="w-full overflow-x-auto scrollbar-thin scrollbar-thumb-pink-200 scrollbar-track-pink-50">
@@ -177,8 +212,28 @@ const BookingsPage = () => {
           </table>
         </div>
 
+        {/* Pagination */}
+        <div className="flex justify-center items-center space-x-4 py-4">
+          <Button
+            onClick={handlePreviousPage}
+            disabled={currentPage === 1}
+            className="bg-pink-500 text-white"
+          >
+            Previous
+          </Button>
 
-        {/* 👁️ View Details Modal */}
+          {/* Dynamic page number buttons */}
+          <div className="flex space-x-2">{renderPageButtons()}</div>
+
+          <Button
+            onClick={handleNextPage}
+            disabled={currentPage === pagination?.totalPages}
+            className="bg-pink-500 text-white"
+          >
+            Next
+          </Button>
+        </div>
+
         <BookingDetailsModal
           isOpen={!!selectedBooking}
           booking={selectedBooking}

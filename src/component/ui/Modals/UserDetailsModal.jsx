@@ -5,6 +5,7 @@ import { useState } from "react";
 
 const UserDetailsModal = ({ isOpen, user, type, onClose }) => {
   if (!isOpen) return null;
+  console.log(user)
 
   const [toggleBlock] = useToggleBlockUnblockMutation();
   const [isLoading, setIsLoading] = useState(false); // Loading state

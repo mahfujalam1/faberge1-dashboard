@@ -1,24 +1,61 @@
-import { EyeOutlined, DeleteOutlined, SearchOutlined } from "@ant-design/icons";
-import { Input } from "antd";
+import { EyeOutlined, SearchOutlined } from "@ant-design/icons";
+import { Input, Button } from "antd";
 import { useState } from "react";
 import { useGetAllUsersQuery } from "../../../redux/features/user/userApi";
 import UserDetailsModal from "../../ui/Modals/UserDetailsModal";
 
 const UserTable = () => {
-  const [searchValue, setSearchValue] = useState("");
-  const [openModal, setOpenModal] = useState(false);
-  const [detailsData, setDetailsData] = useState({});
-  const { data } = useGetAllUsersQuery({
-    page: 1,
-    limit: 10,
-    sortBy: null,
+  const [searchValue, setSearchValue] = useState(""); // Search term for filtering
+  const [currentPage, setCurrentPage] = useState(1); // Current page for pagination
+  const [openModal, setOpenModal] = useState(false); // Modal state for user details
+  const [detailsData, setDetailsData] = useState({}); // Store the details of selected user
+
+  const limit = 8; // Define the page size (limit)
+
+  // Fetch data based on page, limit, and search term
+  const { data, isLoading } = useGetAllUsersQuery({
+    page: currentPage,
+    limit,
     searchTerm: searchValue,
   });
+  const pagination = data?.pagination;
   const filteredData = data?.data;
 
-  const handleViewCustomer = (data) => {
-    setOpenModal(true);
-    setDetailsData(data);
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  // Pagination logic
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (filteredData?.length === limit) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const renderPageButtons = () => {
+    let buttons = [];
+    for (let i = 1; i <= pagination?.totalPages; i++) {
+      buttons.push(
+        <Button
+          key={i}
+          onClick={() => handlePageChange(i)}
+          className={`${
+            currentPage === i
+              ? "bg-pink-500 text-white"
+              : "bg-white text-pink-500 border-pink-500"
+          }`}
+        >
+          {i}
+        </Button>
+      );
+    }
+    return buttons;
   };
 
   return (
@@ -64,7 +101,7 @@ const UserTable = () => {
                     />
                     <span
                       className="text-[#e91e63] font-medium cursor-pointer hover:underline"
-                      onClick={() => onView(user)}
+                      onClick={() => handleViewCustomer(user)}
                     >
                       {user.firstName + " " + user?.lastName}
                     </span>
@@ -85,10 +122,7 @@ const UserTable = () => {
               ))
             ) : (
               <tr>
-                <td
-                  colSpan={"customer" ? 6 : 5}
-                  className="text-center py-6 text-gray-500"
-                >
+                <td colSpan={5} className="text-center py-6 text-gray-500">
                   No Customers found.
                 </td>
               </tr>
@@ -96,6 +130,30 @@ const UserTable = () => {
           </tbody>
         </table>
       </div>
+
+      {/* Pagination */}
+      <div className="flex justify-center items-center space-x-4 py-4">
+        <Button
+          onClick={handlePreviousPage}
+          disabled={currentPage === 1}
+          className="bg-pink-500 text-white"
+        >
+          Previous
+        </Button>
+
+        {/* Dynamic page number buttons */}
+        <div className="flex space-x-2">{renderPageButtons()}</div>
+
+        <Button
+          onClick={handleNextPage}
+          disabled={currentPage === pagination?.totalPages}
+          className="bg-pink-500 text-white"
+        >
+          Next
+        </Button>
+      </div>
+
+      {/* Details Modal */}
       <UserDetailsModal
         isOpen={openModal}
         onClose={() => setOpenModal(false)}

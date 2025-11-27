@@ -7,7 +7,6 @@ import { useState, useEffect } from "react";
 import CustomButton from "../../utils/CustomButton";
 import {
   useGetAboutUsQuery,
-  useUpdateAboutUsMutation,
 } from "../../redux/features/site-content/site-content";
 import { toast } from "sonner";
 

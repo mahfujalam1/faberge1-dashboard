@@ -20,7 +20,7 @@ const dashboardApi = baseApi.injectEndpoints({
 
     getUpcomingBookings: builder.query({
       query: () => ({
-        url: `/booking/get-all-bookings?page=1&limit=5&status=booked`,
+        url: `/booking/get-all-bookings?page=1&limit=5&status=booked&filterType=upcoming`,
         method: "GET",
       }),
       providesTags: [tagTypes.bookings],

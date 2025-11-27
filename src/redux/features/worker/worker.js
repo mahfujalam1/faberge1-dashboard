@@ -4,8 +4,8 @@ import { tagTypes } from "../../tagTypes";
 const workerApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getAllWorkers: builder.query({
-      query: (searchTerm) => ({
-        url: `/worker/get-all-worker?search=${searchTerm}`,
+      query: ({ page, limit, searchTerm }) => ({
+        url: `/worker/get-all-worker?page=${page}&limit=${limit}&search=${searchTerm}`,
         method: "GET",
       }),
       providesTags: [tagTypes.workers],

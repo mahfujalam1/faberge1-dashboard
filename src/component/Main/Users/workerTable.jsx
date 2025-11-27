@@ -1,20 +1,67 @@
 import { EyeOutlined, DeleteOutlined, SearchOutlined } from "@ant-design/icons";
-import { Input } from "antd";
+import { Input, Button } from "antd";
 import { useState } from "react";
 import { useGetAllWorkersQuery } from "../../../redux/features/worker/worker";
 import UserDetailsModal from "../../ui/Modals/UserDetailsModal";
 
 const WorkerTable = () => {
-  const [searchValue, setSearchValue] = useState("");
-  const [openModal, setOpenModal] = useState(false);
-  const [detailsData, setDetailsData] = useState({});
-  const { data } = useGetAllWorkersQuery(searchValue);
+  const [searchValue, setSearchValue] = useState(""); // Search term for filtering
+  const [currentPage, setCurrentPage] = useState(1); // Page number for pagination
+  const [openModal, setOpenModal] = useState(false); // Modal state for details
+  const [detailsData, setDetailsData] = useState({}); // Store the details of selected worker
+
+  // Define page size (limit)
+  const limit = 8;
+
+  // Fetch data based on search term, current page, and limit
+  const { data, isLoading } = useGetAllWorkersQuery({
+    page: currentPage,
+    limit,
+    searchTerm: searchValue,
+  });
+  const pagination = data?.pagination;
+
   const filteredData = data?.data;
 
-
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
   const handleViewWorker = (data) => {
     setOpenModal(true);
     setDetailsData(data);
+  };
+
+  // Pagination logic
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
+  const handleNextPage = () => {
+    if (filteredData?.length === limit) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const renderPageButtons = () => {
+    let buttons = [];
+    for (let i = 1; i <= pagination?.totalPages; i++) {
+      buttons.push(
+        <Button
+          key={i}
+          onClick={() => handlePageChange(i)}
+          className={`${
+            currentPage === i
+              ? "bg-pink-500 text-white"
+              : "bg-white text-pink-500 border-pink-500"
+          }`}
+        >
+          {i}
+        </Button>
+      );
+    }
+    return buttons;
   };
 
   return (
@@ -55,7 +102,7 @@ const WorkerTable = () => {
                     <img
                       src={
                         user.uploadPhoto &&
-                        user.uploadPhoto === "http://10.10.20.16:5137undefined" 
+                        user.uploadPhoto === "http://10.10.20.16:5137undefined"
                           ? "https://avatar.iran.liara.run/public/39"
                           : user.uploadPhoto
                       }
@@ -64,7 +111,7 @@ const WorkerTable = () => {
                     />
                     <span
                       className="text-[#e91e63] font-medium cursor-pointer hover:underline"
-                      onClick={() => onView(user)}
+                      onClick={() => handleViewWorker(user)}
                     >
                       {user.firstName}
                     </span>
@@ -83,7 +130,13 @@ const WorkerTable = () => {
                     ))}
                   </td>
                   <td className="px-6 py-3 w-[120px]">
-                    <span className="bg-green-100 text-green-700 text-xs px-3 py-1 rounded-full">
+                    <span
+                      className={`${
+                        user?.isBlocked
+                          ? "bg-red-200 text-red-600 text-xs px-3 py-1 rounded-full"
+                          : "bg-green-100 text-green-700 text-xs px-3 py-1 rounded-full"
+                      }`}
+                    >
                       {user?.isBlocked ? "Blocked" : "Active"}
                     </span>
                   </td>
@@ -99,16 +152,35 @@ const WorkerTable = () => {
               ))
             ) : (
               <tr>
-                <td
-                  colSpan={"worker" ? 6 : 5}
-                  className="text-center py-6 text-gray-500"
-                >
+                <td colSpan={7} className="text-center py-6 text-gray-500">
                   No Workers found.
                 </td>
               </tr>
             )}
           </tbody>
         </table>
+      </div>
+
+      {/* Pagination */}
+      <div className="flex justify-center items-center space-x-4 py-4">
+        <Button
+          onClick={handlePreviousPage}
+          disabled={currentPage === 1}
+          className="bg-pink-500 text-white"
+        >
+          Previous
+        </Button>
+
+        {/* Dynamic page number buttons */}
+        <div className="flex space-x-2">{renderPageButtons()}</div>
+
+        <Button
+          onClick={handleNextPage}
+          disabled={currentPage === pagination?.totalPages}
+          className="bg-pink-500 text-white"
+        >
+          Next
+        </Button>
       </div>
 
       {/* Details Modal */}

@@ -4,40 +4,10 @@ import { EyeOutlined, DeleteOutlined } from "@ant-design/icons";
 import ConfirmationModal from "../../ui/Modals/ConfirmationModal";
 import UserDetailsModal from "../../ui/Modals/UserDetailsModal"; // ✅ import modal
 import { useGetUpcomingBookingsQuery } from "../../../redux/features/dashboard/dashboardApi";
-
-const mockBookings = [
-  {
-    id: 1,
-    name: "John S.",
-    userId: "ID# 6592",
-    service: "Mani, Pedi, Water, Gel",
-    date: "10/12/2025, 10 AM",
-    status: "Upcoming",
-    avatar: "https://randomuser.me/api/portraits/women/65.jpg",
-  },
-  {
-    id: 2,
-    name: "John S.",
-    userId: "ID# 6592",
-    service: "Mani, Pedi, Water, Gel",
-    date: "10/12/2025, 10 AM",
-    status: "Upcoming",
-    avatar: "https://randomuser.me/api/portraits/women/66.jpg",
-  },
-  {
-    id: 3,
-    name: "John S.",
-    userId: "ID# 6592",
-    service: "Mani, Pedi, Water, Gel",
-    date: "10/12/2025, 10 AM",
-    status: "Upcoming",
-    avatar: "https://randomuser.me/api/portraits/women/67.jpg",
-  },
-];
+import BookingDetailsModal from "../../ui/Modals/BookingDetailsModal";
 
 const UpcomingBooking = () => {
   const navigate = useNavigate();
-  const [deleteId, setDeleteId] = useState(null);
   const { data } = useGetUpcomingBookingsQuery();
   const bookings = data?.data;
 
@@ -47,15 +17,6 @@ const UpcomingBooking = () => {
   const handleView = (booking) => {
     // open modal with selected booking info
     setSelectedUser(booking);
-  };
-
-  const handleDelete = (id) => {
-    setDeleteId(id);
-  };
-
-  const confirmDelete = () => {
-    // setBookings(bookings.filter((b) => b.id !== deleteId));
-    setDeleteId(null);
   };
 
   const formatDateTime = (dateString) => {
@@ -156,15 +117,9 @@ const UpcomingBooking = () => {
 
                   <td className="px-6 py-3">
                     <span
-                      className={`text-xs px-3 py-1 rounded-full font-medium ${
-                        booking.status === "Completed"
-                          ? "bg-green-100 text-green-700"
-                          : booking.status === "Pending"
-                          ? "bg-yellow-100 text-yellow-700"
-                          : "bg-red-100 text-red-700"
-                      }`}
+                      className={`text-xs px-3 py-1 rounded-full font-medium bg-orange-100 text-orange-500}`}
                     >
-                      {booking.status}
+                      Upcoming
                     </span>
                   </td>
 
@@ -173,10 +128,6 @@ const UpcomingBooking = () => {
                       <EyeOutlined
                         className="cursor-pointer hover:text-pink-500 text-lg"
                         onClick={() => handleView(booking)}
-                      />
-                      <DeleteOutlined
-                        className="cursor-pointer hover:text-red-500 text-lg"
-                        onClick={() => handleDelete(booking.id)}
                       />
                     </div>
                   </td>
@@ -197,26 +148,11 @@ const UpcomingBooking = () => {
       </div>
 
       {/* ✅ View User Details Modal */}
-      <UserDetailsModal
-        isOpen={!!selectedUser}
-        user={selectedUser}
-        type="customer"
-        onClose={() => setSelectedUser(null)}
-        onAction={(user) => {
-          console.log("Action performed for:", user.name);
-          setSelectedUser(null);
-        }}
-      />
 
-      {/* Delete Confirmation Modal */}
-      <ConfirmationModal
-        isOpen={!!deleteId}
-        title="Delete Booking"
-        message="Are you sure you want to delete this booking?"
-        confirmText="Yes, Delete"
-        cancelText="Cancel"
-        onConfirm={confirmDelete}
-        onCancel={() => setDeleteId(null)}
+      <BookingDetailsModal
+        isOpen={!!selectedUser}
+        booking={selectedUser}
+        onClose={() => setSelectedUser(null)}
       />
     </div>
   );

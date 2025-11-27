@@ -53,10 +53,10 @@ const ManagerList = ({ onDelete, onOpenAccess, managers }) => {
 
                   <td className="px-6 py-3">
                     <span
-                      className={`text-xs px-3 py-1 rounded-full font-semibold ${
-                        manager?.isBlocked === false
-                          ? "bg-green-100 text-green-700"
-                          : "bg-red-100 text-red-700"
+                      className={`${
+                        manager?.isBlocked
+                          ? "bg-red-200 text-red-600 text-xs px-3 py-1 rounded-full"
+                          : "bg-green-100 text-green-700 text-xs px-3 py-1 rounded-full"
                       }`}
                     >
                       {manager?.isBlocked ? "Blocked" : "Active"}
@@ -75,7 +75,7 @@ const ManagerList = ({ onDelete, onOpenAccess, managers }) => {
                     {/* Block/Unblock Button */}
                     <button
                       onClick={() => onDelete(manager?._id)} // Pass the manager's ID to the onDelete function
-                      className="bg-[#e91e63] text-white px-3 py-1 rounded-md shadow hover:bg-[#d81b60] transition-all"
+                      className="bg-[#e91e63] text-white px-3 py-1 text-xs rounded-md shadow hover:bg-[#d81b60] transition-all"
                     >
                       {manager?.isBlocked ? "Unblock" : "Block"}
                     </button>

@@ -5,7 +5,7 @@ const bookingApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getAllBookings: builder.query({
       query: ({ page, limit, status }) => ({
-        url: `booking/get-all-bookings?page=${page}&limit=${limit}&status=${status}`,
+        url: `/booking/get-all-bookings?page=${page}&limit=${limit}&status=${status}`,
         method: "GET",
       }),
       providesTags: [tagTypes.bookings],
@@ -18,7 +18,19 @@ const bookingApi = baseApi.injectEndpoints({
       }),
       providesTags: [tagTypes.bookings],
     }),
+
+    getBookingsTrends: builder.query({
+      query: (year) => ({
+        url: `/booking/booking-trends?year=${year}`,
+        method: "GET",
+      }),
+      providesTags: [tagTypes.bookings],
+    }),
   }),
 });
 
-export const { useGetAllBookingsQuery, useGetAllTransactionsQuery } = bookingApi;
+export const {
+  useGetAllBookingsQuery,
+  useGetAllTransactionsQuery,
+  useGetBookingsTrendsQuery,
+} = bookingApi;

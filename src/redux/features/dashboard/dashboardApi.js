@@ -25,6 +25,14 @@ const dashboardApi = baseApi.injectEndpoints({
       }),
       providesTags: [tagTypes.bookings],
     }),
+
+    getSingleManager: builder.query({
+      query: () => ({
+        url: `/manager/me`,
+        method: "GET",
+      }),
+      providesTags: [tagTypes.managers, tagTypes.users],
+    }),
   }),
 });
 
@@ -32,4 +40,5 @@ export const {
   useGetDashboardStatusQuery,
   useGetIncomeRatioQuery,
   useGetUpcomingBookingsQuery,
+  useGetSingleManagerQuery,
 } = dashboardApi;

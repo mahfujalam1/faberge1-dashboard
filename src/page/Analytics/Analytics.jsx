@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import {
   BarChart,
   Bar,
@@ -7,14 +7,12 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  LineChart,
-  Line,
-  Legend,
   AreaChart,
   Area,
 } from "recharts";
 import { Tabs, Select, Space } from "antd";
-import { RiInfinityLine } from "react-icons/ri";
+import { useGetBookingsTrendsQuery } from "../../redux/features/booking/booking";
+import { useGetWorkerPopularityQuery } from "../../redux/features/worker/worker";
 
 const months = [
   "Jan",
@@ -42,28 +40,10 @@ const yearOptions = [
   defaultYear + 1,
 ].map((y) => ({ label: String(y), value: y }));
 
-const baseWorkerData = [
-  { name: "John", value: 400 },
-  { name: "Liam", value: 300 },
-  { name: "Jack", value: 200 },
-  { name: "Hershali", value: 280 },
-  { name: "Maksud", value: 190 },
-  { name: "Kutub", value: 240 },
-  { name: "Jangu", value: 350 },
-  { name: "Monalisa", value: 270 },
-  { name: "Orries", value: 320 },
-  { name: "Mories", value: 290 },
-  { name: "Nova", value: 310 },
-  { name: "Don Kiele", value: 380 },
-];
-
-const monthIndex = (m) => months.indexOf(m);
-const seeded = (seed, mod) => ((seed % mod) + mod) % mod;
-
-// ✅ Service data: always at least 2 services; "Other" optional
-function getServiceData(selectedMonth, selectedYear) {
-  const idx = monthIndex(selectedMonth);
-  const seed = (selectedYear % 97) * 31 + idx * 17;
+// Utility function to generate service data
+function getServiceData(year, month) {
+  const idx = month - 1; // month is 1-based, so subtract 1 to get the index
+  const seed = (year % 97) * 31 + idx * 17;
 
   const candidates = ["Manicure", "Pedicure", "Gel", "Pedicure", "Other"];
   const count = 2 + seeded(seed, 2); // 2 or 3 services
@@ -80,16 +60,18 @@ function getServiceData(selectedMonth, selectedYear) {
   });
 }
 
-function getWorkerData(selectedMonth, selectedYear) {
-  const idx = monthIndex(selectedMonth);
-  const factor = 0.88 + ((selectedYear + idx) % 8) * 0.02;
+// Utility function to generate worker data
+function getWorkerData(year, month) {
+  const idx = month - 1;
+  const factor = 0.88 + ((year + idx) % 8) * 0.02;
   return baseWorkerData.map((w, i) => ({
     ...w,
     value: Math.round(w.value * (factor + (i % 4) * 0.02)),
   }));
 }
 
-function getBookingTrends(selectedYear) {
+// Utility function to generate booking trends data
+function getBookingTrends(year) {
   return months.map((m, i) => {
     const omega = (i / 12) * Math.PI * 2;
     const confirmed = 260 + Math.sin(omega) * 90 + 70;
@@ -102,6 +84,28 @@ function getBookingTrends(selectedYear) {
   });
 }
 
+// Helper function to generate seeded values
+function seeded(seed, mod) {
+  return ((seed % mod) + mod) % mod;
+}
+
+// Base worker data
+const baseWorkerData = [
+  { name: "John", value: 400 },
+  { name: "Liam", value: 300 },
+  { name: "Jack", value: 200 },
+  { name: "Hershali", value: 280 },
+  { name: "Maksud", value: 190 },
+  { name: "Kutub", value: 240 },
+  { name: "Jangu", value: 350 },
+  { name: "Monalisa", value: 270 },
+  { name: "Orries", value: 320 },
+  { name: "Mories", value: 290 },
+  { name: "Nova", value: 310 },
+  { name: "Don Kiele", value: 380 },
+];
+
+// Chart Wrapper Component
 const ChartWrapper = ({ children, height = 380 }) => (
   <div className="bg-white shadow-sm rounded-xl p-4 md:p-6 w-full mt-3">
     <ResponsiveContainer width="100%" height={height}>
@@ -115,17 +119,35 @@ const Analytics = () => {
   const [selectedMonth, setSelectedMonth] = useState(defaultMonth);
   const [selectedYear, setSelectedYear] = useState(defaultYear);
 
+  // Fetch data using the selected month and year
+  const { data: bookingTrendsData } = useGetBookingsTrendsQuery(selectedYear);
+  const { data: workerPopuData } = useGetWorkerPopularityQuery({
+    month: months.indexOf(selectedMonth) + 1,
+    year: selectedYear,
+  });
+
+  const workerPopularity = workerPopuData?.data;
+  const bookingTrends = bookingTrendsData?.data;
+
+  // Generate service, worker, and booking data
   const serviceData = useMemo(
-    () => getServiceData(selectedMonth, selectedYear),
+    () => getServiceData(selectedYear, months.indexOf(selectedMonth) + 1),
     [selectedMonth, selectedYear]
   );
+
   const workerData = useMemo(
-    () => getWorkerData(selectedMonth, selectedYear),
+    () => getWorkerData(selectedYear, months.indexOf(selectedMonth) + 1),
     [selectedMonth, selectedYear]
   );
-  const bookingTrends = useMemo(
-    () => getBookingTrends(selectedYear),
-    [selectedYear]
+
+  const bookingTrendsFormatted = useMemo(
+    () =>
+      bookingTrends?.map((trend) => ({
+        month: trend.month,
+        confirmed: trend.totalBookings,
+        cancelled: 0, // you can modify this if you have cancelled booking data
+      })) || [],
+    [bookingTrends]
   );
 
   const serviceCount = serviceData.length;
@@ -199,37 +221,17 @@ const Analytics = () => {
       key: "2",
       label: "Worker Popularity",
       children: (
-        <ChartWrapper>
-          <BarChart
-            data={workerData}
-            margin={{ top: 10, right: 30, left: 0, bottom: 10 }}
-          >
-            <CartesianGrid strokeDasharray="3 3" stroke="#f3d2db" />
-            <XAxis
-              dataKey="name"
-              stroke="#555"
-              interval={0}
-              angle={-20}
-              height={60}
-              tickMargin={10}
-            />
-            <YAxis
-              ticks={[0, 150, 300, 450, 600]}
-              domain={[0, 600]}
-              tick={{ fill: "#666", fontSize: 12 }}
-              axisLine={false}
-              tickLine={false}
-              tickFormatter={(val) => (val === 600 ? "Ꝏ" : val)}
-            />
-            <Tooltip />
-            <Bar
-              dataKey="value"
-              fill="#e91e63"
-              radius={[6, 6, 0, 0]}
-              barSize={35}
-            />
-          </BarChart>
-        </ChartWrapper>
+        <div className="bg-white shadow-sm rounded-xl p-4 md:p-6 w-full mt-3">
+          <ResponsiveContainer width="100%" height={380}>
+            <BarChart data={workerData}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#f3d2db" />
+              <XAxis dataKey="name" stroke="#555" />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="value" fill="#e91e63" barSize={35} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       ),
     },
     {
@@ -242,17 +244,13 @@ const Analytics = () => {
           </h3>
           <ResponsiveContainer width="100%" height={300}>
             <AreaChart
-              data={bookingTrends}
+              data={bookingTrendsFormatted}
               margin={{ top: 10, right: 30, left: 0, bottom: 0 }}
             >
               <defs>
                 <linearGradient id="colorConfirmed" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#e91e63" stopOpacity={0.3} />
                   <stop offset="95%" stopColor="#e91e63" stopOpacity={0.05} />
-                </linearGradient>
-                <linearGradient id="colorCancelled" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#2979ff" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#2979ff" stopOpacity={0.05} />
                 </linearGradient>
               </defs>
 
@@ -289,13 +287,6 @@ const Analytics = () => {
                 dataKey="confirmed"
                 stroke="#e91e63"
                 fill="url(#colorConfirmed)"
-                strokeWidth={2}
-              />
-              <Area
-                type="monotone"
-                dataKey="cancelled"
-                stroke="#2979ff"
-                fill="url(#colorCancelled)"
                 strokeWidth={2}
               />
             </AreaChart>

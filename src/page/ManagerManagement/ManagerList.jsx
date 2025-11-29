@@ -29,7 +29,7 @@ const ManagerList = ({ onDelete, onOpenAccess, managers }) => {
             {managers?.length > 0 ? (
               managers?.map((manager) => (
                 <tr
-                  key={manager.id}
+                  key={manager._id}
                   className="border-b border-pink-100 hover:bg-pink-50 transition-all"
                 >
                   <td className="px-6 py-3 flex items-center gap-3">

@@ -25,6 +25,14 @@ const workerApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: [tagTypes.workers],
     }),
+
+    getWorkerPopularity: builder.query({
+      query: ({ month, year }) => ({
+        url: `/booking/popularity?year=${year}&month=${month}`,
+        method: "GET",
+      }),
+      providesTags: [tagTypes.workers],
+    }),
   }),
 });
 
@@ -32,4 +40,5 @@ export const {
   useGetAllWorkersQuery,
   useGetSingleWorkerQuery,
   useCreateWorkerMutation,
+  useGetWorkerPopularityQuery
 } = workerApi;

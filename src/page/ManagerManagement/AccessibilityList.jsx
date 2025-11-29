@@ -2,19 +2,26 @@ import React, { useEffect, useState } from "react";
 import {
   useGetAllAccessibilityQuery,
   useUpdateManagerAccessMutation,
-} from "../../redux/features/superAdmin/super-admin"; // Importing the mutation hook
+} from "../../redux/features/superAdmin/super-admin";
 import {
   FaChartBar,
   FaChartLine,
   FaUsers,
   FaCar,
   FaMoneyCheckAlt,
-  FaTools, // Add new icons if necessary
-  FaQuestionCircle, // Add for Help and Support
+  FaTools,
+  FaQuestionCircle,
+  FaBell,
+  FaUserShield,
+  FaMapMarkerAlt,
+  FaCalendarAlt,
+  FaUserCircle,
+  FaFileAlt,
+  FaGavel,
 } from "react-icons/fa";
 import { toast } from "sonner";
 
-// Default module icons and labels
+// Complete module icons and labels matching sidebar (all with "Show")
 const moduleMapping = {
   isDashboardShow: {
     label: "Dashboard",
@@ -24,33 +31,49 @@ const moduleMapping = {
     label: "Analytics",
     icon: <FaChartLine />,
   },
-  isUsersShow: {
-    label: "Users",
-    icon: <FaUsers />,
-  },
-  isServicesShow: {
-    label: "Services",
-    icon: <FaCar />,
+  isBookingManagementShow: {
+    label: "Bookings",
+    icon: <FaCalendarAlt />,
   },
   isTransactionsShow: {
     label: "Transactions",
     icon: <FaMoneyCheckAlt />,
   },
-  isHelpAndSupport: {
-    label: "Help & Support",
-    icon: <FaQuestionCircle />,
+  isServicesShow: {
+    label: "Services",
+    icon: <FaCar />,
   },
-  isBookingManagement: {
-    label: "Booking Management",
-    icon: <FaTools />,
+  isUsersShow: {
+    label: "Users",
+    icon: <FaUsers />,
+  },
+  isStateShow: {
+    label: "States",
+    icon: <FaMapMarkerAlt />,
+  },
+  isHelpAndSupportShow: {
+    label: "Notifications",
+    icon: <FaBell />,
+  },
+  isProfileShow: {
+    label: "Profile",
+    icon: <FaUserCircle />,
+  },
+  isSiteContentShow: {
+    label: "Site Content",
+    icon: <FaFileAlt />,
+  },
+  isLegalitiesShow: {
+    label: "Legalities",
+    icon: <FaGavel />,
   },
 };
 
 const AccessibilityList = ({ managers }) => {
-  const { data, isLoading, isError } = useGetAllAccessibilityQuery(); // Fetch accessibility data dynamically
-  const [updateManagerAccess] = useUpdateManagerAccessMutation(); // Mutation to update the manager's accessibility
+  const { data, isLoading, isError } = useGetAllAccessibilityQuery();
+  const [updateManagerAccess] = useUpdateManagerAccessMutation();
 
-  const [managerData, setManagerData] = useState(managers); // Store manager data locally
+  const [managerData, setManagerData] = useState(managers);
 
   useEffect(() => {
     if (isError) {
@@ -68,30 +91,30 @@ const AccessibilityList = ({ managers }) => {
 
   // Function to get the manager's access to a specific module
   const getManagerAccess = (manager, moduleKey) => {
-    return manager?.accessibility?.[moduleKey] ?? false; // Default to false if undefined
+    return manager?.accessibility?.[moduleKey] ?? false;
   };
 
-  // Handle the toggle action: This sends the updated access status to the backend
+  // Handle the toggle action
   const handleToggleAccess = (managerId, moduleKey, newValue) => {
-    // Optimistic UI Update: Immediately reflect the change in the UI
+    // Optimistic UI Update
     const updatedManagers = managerData.map((manager) =>
       manager._id === managerId
         ? {
             ...manager,
             accessibility: {
               ...manager.accessibility,
-              [moduleKey]: newValue, // Update the specific module access
+              [moduleKey]: newValue,
             },
           }
         : manager
     );
-    setManagerData(updatedManagers); // Update local state immediately
+    setManagerData(updatedManagers);
 
     // Prepare the data to update
     const data = { [moduleKey]: newValue };
 
-    // Call the mutation to update the manager's access on the backend
-    const res = updateManagerAccess({ managerId, data })
+    // Call the mutation
+    updateManagerAccess({ managerId, data })
       .then((response) => {
         console.log("Access updated successfully:", response);
         toast.success(response?.data?.message);
@@ -100,19 +123,19 @@ const AccessibilityList = ({ managers }) => {
         console.error("Failed to update access:", error);
         toast.error("Failed to update accessibility");
 
-        // Rollback the optimistic update if the request fails
+        // Rollback
         const rollbackManagers = managerData.map((manager) =>
           manager._id === managerId
             ? {
                 ...manager,
                 accessibility: {
                   ...manager.accessibility,
-                  [moduleKey]: !newValue, // Revert the access change
+                  [moduleKey]: !newValue,
                 },
               }
             : manager
         );
-        setManagerData(rollbackManagers); // Rollback the local state update
+        setManagerData(rollbackManagers);
       });
   };
 
@@ -120,10 +143,10 @@ const AccessibilityList = ({ managers }) => {
     <div className="bg-white rounded-xl shadow-sm border border-pink-100 p-4 overflow-y-auto max-h-72">
       <div className="flex flex-col divide-y divide-pink-100">
         {Object.entries(moduleMapping).map(([key, { label, icon }]) => {
-          const isActive = getManagerAccess(managerData[0], key); // Check if the module is enabled for the current manager
+          const isActive = getManagerAccess(managerData[0], key);
 
           return (
-            // Render the module toggle only if the module exists in the manager's accessibility object
+            // Render the module toggle only if it exists in accessibility
             data?.data[key] !== undefined && (
               <div
                 key={key}
@@ -145,7 +168,7 @@ const AccessibilityList = ({ managers }) => {
                         key,
                         e.target.checked
                       )
-                    } // Pass manager._id and the updated value
+                    }
                     className="sr-only peer"
                   />
                   <div className="w-10 h-5 bg-gray-300 rounded-full peer peer-checked:bg-[#e91e63] transition-all"></div>

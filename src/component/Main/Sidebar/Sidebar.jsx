@@ -20,32 +20,93 @@ import { NavLink, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import ConfirmationModal from "../../ui/Modals/ConfirmationModal";
 import { SiTheconversation } from "react-icons/si";
+import { useGetSingleManagerQuery } from "../../../redux/features/dashboard/dashboardApi";
 
 const menuItems = [
-  { name: "Dashboard", path: "/", icon: <DashboardOutlined /> },
-  { name: "Analytics", path: "/analytics", icon: <LineChartOutlined /> },
-  { name: "Bookings", path: "/bookings", icon: <CalendarOutlined /> },
-  { name: "Transactions", path: "/transaction", icon: <TransactionOutlined /> },
-  { name: "Services", path: "/services", icon: <AppstoreOutlined /> },
-  { name: "Users", path: "/users", icon: <UsergroupAddOutlined /> },
+  {
+    name: "Dashboard",
+    path: "/",
+    icon: <DashboardOutlined />,
+    accessKey: "isDashboardShow",
+  },
+  {
+    name: "Analytics",
+    path: "/analytics",
+    icon: <LineChartOutlined />,
+    accessKey: "isAnalyticsShow",
+  },
+  {
+    name: "Bookings",
+    path: "/bookings",
+    icon: <CalendarOutlined />,
+    accessKey: "isBookingManagementShow",
+  },
+  {
+    name: "Transactions",
+    path: "/transaction",
+    icon: <TransactionOutlined />,
+    accessKey: "isTransactionsShow",
+  },
+  {
+    name: "Services",
+    path: "/services",
+    icon: <AppstoreOutlined />,
+    accessKey: "isServicesShow",
+  },
+  {
+    name: "Users",
+    path: "/users",
+    icon: <UsergroupAddOutlined />,
+    accessKey: "isUsersShow",
+  },
   {
     name: "Managers",
     path: "/manager-management",
     icon: <UserAddOutlined />,
+    accessKey: "isManagerManagementShow",
   },
-  { name: "States", path: "/states", icon: <EnvironmentOutlined /> },
+  {
+    name: "States",
+    path: "/states",
+    icon: <EnvironmentOutlined />,
+    accessKey: "isStateShow",
+  },
   {
     name: "Notifications",
     path: "/notification",
     icon: <IoNotificationsOutline />,
+    accessKey: "isHelpAndSupportShow",
   },
-  { name: "Profile", path: "/profile", icon: <UsergroupAddOutlined /> },
-  { name: "Site Content", path: "/site-content", icon: <SettingOutlined /> },
-  { name: "Legalities", path: "/legalities", icon: <SiTheconversation /> },
-  { name: "Help & Support", path: "/help", icon: <QuestionCircleOutlined /> },
+  {
+    name: "Profile",
+    path: "/profile",
+    icon: <UsergroupAddOutlined />,
+    accessKey: "isProfileShow",
+  },
+  {
+    name: "Site Content",
+    path: "/site-content",
+    icon: <SettingOutlined />,
+    accessKey: "isSiteContentShow",
+  },
+  {
+    name: "Legalities",
+    path: "/legalities",
+    icon: <SiTheconversation />,
+    accessKey: "isLegalitiesShow",
+  },
+  {
+    name: "Help & Support",
+    path: "/help",
+    icon: <QuestionCircleOutlined />,
+    accessKey: "isHelpAndSupportShow",
+  },
 ];
 
 const Sidebar = () => {
+  const { data } = useGetSingleManagerQuery();
+  const managerItem = data;
+  console.log(managerItem);
   const [isOpen, setIsOpen] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
@@ -55,6 +116,16 @@ const Sidebar = () => {
     toast.success("User Logged Out!");
     navigate("/auth/sign-in");
   };
+
+  // Filter menu items based on manager's role and accessibility
+  const accessibleMenuItems =
+    managerItem?.role === "admin"
+      ? menuItems // Show all items for admin
+      : menuItems?.filter(
+          (item) => managerItem?.accessibility?.[item?.accessKey] === true // Filter for manager
+        );
+
+  console.log(accessibleMenuItems);
 
   return (
     <>
@@ -82,7 +153,7 @@ const Sidebar = () => {
 
           {/* Menu Items */}
           <ul className="flex-1 mt-6 flex flex-col gap-1 pb-24">
-            {menuItems.map((item) => (
+            {accessibleMenuItems?.map((item) => (
               <NavLink
                 key={item.name}
                 to={item.path}
@@ -124,7 +195,7 @@ const Sidebar = () => {
 
         {/* ✅ Scrollable mobile menu */}
         <ul className="flex-1 mt-6 flex flex-col gap-1 overflow-y-auto scrollbar-thin scrollbar-thumb-[#f7c1d0] scrollbar-track-[#e8aebf]/40">
-          {menuItems.map((item) => (
+          {accessibleMenuItems?.map((item) => (
             <NavLink
               key={item.name}
               to={item.path}

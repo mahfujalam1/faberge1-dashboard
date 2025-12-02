@@ -18,10 +18,12 @@ const SignIn = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const res = await login(formData);
-    console.log(res?.data?.message)
+    console.log(res)
     if (res?.data) {
       toast.success(res?.data?.message);
       localStorage.setItem("token", res?.data?.token);
+    }else if(res?.error){
+      toast.error(res?.error?.data?.message || "Login failed");
     }
     navigation('/')
   };

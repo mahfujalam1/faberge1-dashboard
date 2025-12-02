@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import {
   BarChart,
   Bar,
@@ -12,7 +12,10 @@ import {
 } from "recharts";
 import { Tabs, Select, Space } from "antd";
 import { useGetBookingsTrendsQuery } from "../../redux/features/booking/booking";
-import { useGetWorkerPopularityQuery } from "../../redux/features/worker/worker";
+import {
+  useGetServicePopularityQuery,
+  useGetWorkerPopularityQuery,
+} from "../../redux/features/worker/worker";
 
 const months = [
   "Jan",
@@ -40,79 +43,18 @@ const yearOptions = [
   defaultYear + 1,
 ].map((y) => ({ label: String(y), value: y }));
 
-// Utility function to generate service data
-function getServiceData(year, month) {
-  const idx = month - 1; // month is 1-based, so subtract 1 to get the index
-  const seed = (year % 97) * 31 + idx * 17;
+// Helper function to calculate Y-axis max (highest value + 30%)
+const calculateYAxisMax = (data, dataKey) => {
+  if (!data || data.length === 0) return 100;
+  const maxValue = Math.max(...data.map((item) => item[dataKey] || 0));
+  return Math.ceil(maxValue * 1.3); // 30% more than highest value
+};
 
-  const candidates = ["Manicure", "Pedicure", "Gel", "Pedicure", "Other"];
-  const count = 2 + seeded(seed, 2); // 2 or 3 services
-
-  const offset = seeded(seed, candidates.length);
-  const rotated = [...candidates.slice(offset), ...candidates.slice(0, offset)];
-  const picked = rotated
-    .filter((s) => !(s === "Other" && seeded(seed * 7, 2) === 0))
-    .slice(0, count);
-
-  return picked.map((service, i) => {
-    const base = 60 + seeded(seed * (i + 3), 140);
-    return { service, value: base };
-  });
-}
-
-// Utility function to generate worker data
-function getWorkerData(year, month) {
-  const idx = month - 1;
-  const factor = 0.88 + ((year + idx) % 8) * 0.02;
-  return baseWorkerData.map((w, i) => ({
-    ...w,
-    value: Math.round(w.value * (factor + (i % 4) * 0.02)),
-  }));
-}
-
-// Utility function to generate booking trends data
-function getBookingTrends(year) {
-  return months.map((m, i) => {
-    const omega = (i / 12) * Math.PI * 2;
-    const confirmed = 260 + Math.sin(omega) * 90 + 70;
-    const cancelled = 30 + Math.cos(omega) * 18 + 20;
-    return {
-      month: m,
-      confirmed: Math.round(confirmed),
-      cancelled: Math.round(cancelled),
-    };
-  });
-}
-
-// Helper function to generate seeded values
-function seeded(seed, mod) {
-  return ((seed % mod) + mod) % mod;
-}
-
-// Base worker data
-const baseWorkerData = [
-  { name: "John", value: 400 },
-  { name: "Liam", value: 300 },
-  { name: "Jack", value: 200 },
-  { name: "Hershali", value: 280 },
-  { name: "Maksud", value: 190 },
-  { name: "Kutub", value: 240 },
-  { name: "Jangu", value: 350 },
-  { name: "Monalisa", value: 270 },
-  { name: "Orries", value: 320 },
-  { name: "Mories", value: 290 },
-  { name: "Nova", value: 310 },
-  { name: "Don Kiele", value: 380 },
-];
-
-// Chart Wrapper Component
-const ChartWrapper = ({ children, height = 380 }) => (
-  <div className="bg-white shadow-sm rounded-xl p-4 md:p-6 w-full mt-3">
-    <ResponsiveContainer width="100%" height={height}>
-      {children}
-    </ResponsiveContainer>
-  </div>
-);
+// Helper function to generate Y-axis ticks
+const generateYAxisTicks = (maxValue) => {
+  const step = Math.ceil(maxValue / 4);
+  return [0, step, step * 2, step * 3, maxValue];
+};
 
 const Analytics = () => {
   const [activeKey, setActiveKey] = useState("1");
@@ -125,33 +67,72 @@ const Analytics = () => {
     month: months.indexOf(selectedMonth) + 1,
     year: selectedYear,
   });
+  const { data: servicePopularityData } = useGetServicePopularityQuery({
+    month: months.indexOf(selectedMonth) + 1,
+    year: selectedYear,
+  });
 
   const workerPopularity = workerPopuData?.data;
   const bookingTrends = bookingTrendsData?.data;
+  const servicePopularity = servicePopularityData?.data;
 
-  // Generate service, worker, and booking data
-  const serviceData = useMemo(
-    () => getServiceData(selectedYear, months.indexOf(selectedMonth) + 1),
-    [selectedMonth, selectedYear]
-  );
+  // Prepare service data with actual totalBookings
+  const serviceData = useMemo(() => {
+    return (
+      servicePopularity?.map((service) => ({
+        serviceName: service.serviceName,
+        value: service.totalBookings,
+      })) || []
+    );
+  }, [servicePopularity]);
 
-  const workerData = useMemo(
-    () => getWorkerData(selectedYear, months.indexOf(selectedMonth) + 1),
-    [selectedMonth, selectedYear]
-  );
+  // Prepare worker data with actual totalBookings
+  const workerData = useMemo(() => {
+    return (
+      workerPopularity?.map((worker) => ({
+        workerName: worker.workerName,
+        value: worker.totalBookings,
+      })) || []
+    );
+  }, [workerPopularity]);
 
-  const bookingTrendsFormatted = useMemo(
-    () =>
+  // Prepare booking trends data
+  const bookingTrendsFormatted = useMemo(() => {
+    return (
       bookingTrends?.map((trend) => ({
         month: trend.month,
         confirmed: trend.totalBookings,
-        cancelled: 0, // you can modify this if you have cancelled booking data
-      })) || [],
-    [bookingTrends]
+      })) || []
+    );
+  }, [bookingTrends]);
+
+  // Calculate Y-axis max values for each chart
+  const serviceYMax = useMemo(
+    () => calculateYAxisMax(serviceData, "value"),
+    [serviceData]
+  );
+  const workerYMax = useMemo(
+    () => calculateYAxisMax(workerData, "value"),
+    [workerData]
+  );
+  const bookingYMax = useMemo(
+    () => calculateYAxisMax(bookingTrendsFormatted, "confirmed"),
+    [bookingTrendsFormatted]
   );
 
-  const serviceCount = serviceData.length;
-  const chartWidth = Math.max(serviceCount * 120, 300);
+  // Generate ticks for each chart
+  const serviceTicks = useMemo(
+    () => generateYAxisTicks(serviceYMax),
+    [serviceYMax]
+  );
+  const workerTicks = useMemo(
+    () => generateYAxisTicks(workerYMax),
+    [workerYMax]
+  );
+  const bookingTicks = useMemo(
+    () => generateYAxisTicks(bookingYMax),
+    [bookingYMax]
+  );
 
   const extraFilters = (
     <Space size={8} className="ml-auto">
@@ -186,22 +167,21 @@ const Analytics = () => {
                   margin={{ top: 10, right: 30, left: 0, bottom: 10 }}
                   barCategoryGap="15%"
                   barGap={10}
-                  barSize={35}
                 >
                   <CartesianGrid strokeDasharray="3 3" stroke="#f3d2db" />
                   <XAxis
-                    dataKey="service"
+                    dataKey="serviceName"
                     stroke="#555"
                     interval={0}
                     tickMargin={10}
                   />
                   <YAxis
-                    ticks={[0, 150, 300, 450, 600]}
-                    domain={[0, 600]}
+                    ticks={serviceTicks}
+                    domain={[0, serviceYMax]}
                     tick={{ fill: "#666", fontSize: 12 }}
                     axisLine={false}
                     tickLine={false}
-                    tickFormatter={(val) => (val === 600 ? "Ꝏ" : val)}
+                    tickFormatter={(val) => (val === serviceYMax ? "Ꝏ" : val)}
                   />
                   <Tooltip />
                   <Bar
@@ -225,10 +205,22 @@ const Analytics = () => {
           <ResponsiveContainer width="100%" height={380}>
             <BarChart data={workerData}>
               <CartesianGrid strokeDasharray="3 3" stroke="#f3d2db" />
-              <XAxis dataKey="name" stroke="#555" />
-              <YAxis />
+              <XAxis dataKey="workerName" stroke="#555" />
+              <YAxis
+                ticks={workerTicks}
+                domain={[0, workerYMax]}
+                tick={{ fill: "#666", fontSize: 12 }}
+                axisLine={false}
+                tickLine={false}
+                tickFormatter={(val) => (val === workerYMax ? "Ꝏ" : val)}
+              />
               <Tooltip />
-              <Bar dataKey="value" fill="#e91e63" barSize={35} />
+              <Bar
+                dataKey="value"
+                fill="#e91e63"
+                barSize={35}
+                radius={[6, 6, 0, 0]}
+              />
             </BarChart>
           </ResponsiveContainer>
         </div>
@@ -266,12 +258,12 @@ const Analytics = () => {
                 tickLine={false}
               />
               <YAxis
-                ticks={[0, 150, 300, 450, 600]}
-                domain={[0, 600]}
+                ticks={bookingTicks}
+                domain={[0, bookingYMax]}
                 tick={{ fill: "#666", fontSize: 12 }}
                 axisLine={false}
                 tickLine={false}
-                tickFormatter={(val) => (val === 600 ? "Ꝏ" : val)}
+                tickFormatter={(val) => (val === bookingYMax ? "Ꝏ" : val)}
               />
               <Tooltip
                 cursor={{ stroke: "#e91e63", strokeWidth: 1 }}

@@ -124,7 +124,7 @@ const router = createBrowserRouter([
         element: <AboutUsPage />,
       },
       {
-        path: "/site-content/edit-about-us/:id",
+        path: "/site-content/edit-about-us/11",
         element: <EditAboutUs />,
       },
     ],

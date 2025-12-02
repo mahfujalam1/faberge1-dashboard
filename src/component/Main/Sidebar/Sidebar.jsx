@@ -113,6 +113,7 @@ const Sidebar = () => {
 
   const handleLogout = () => {
     setShowModal(false);
+    localStorage.removeItem("token");
     toast.success("User Logged Out!");
     navigate("/auth/sign-in");
   };

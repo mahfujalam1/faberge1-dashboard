@@ -42,7 +42,7 @@ const ManagerList = ({ onDelete, onOpenAccess, managers }) => {
                       className="w-9 h-9 rounded-full object-cover"
                     />
                     <span className="text-[#e91e63] font-medium cursor-pointer hover:underline">
-                      {manager.name}
+                      {manager?.firstName + " " + manager?.lastName}
                     </span>
                   </td>
 

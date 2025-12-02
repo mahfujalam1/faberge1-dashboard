@@ -7,25 +7,34 @@ import {
 
 const CreateManager = ({ onSubmit }) => {
   const [formData, setFormData] = useState({
-    name: "",
+    firstName: "",
+    lastName: "",
     address: "",
     city: "",
     state: "",
     zip: "",
     email: "",
     managerId: "",
-    newPassword: "",
+    phone: "",
+    password: "",
     confirmPassword: "",
-    profileImage: "",
+    managerProfileImage: "",
   });
 
   const fileInputRef = useRef(null);
   const [preview, setPreview] = useState(null);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+
+    // Clear password error when user types
+    if (name === "password" || name === "confirmPassword") {
+      setPasswordError("");
+    }
   };
 
   const handleFileClick = () => fileInputRef.current.click();
@@ -41,7 +50,42 @@ const CreateManager = ({ onSubmit }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSubmit(formData);
+
+    // Password matching validation
+    if (formData.password !== formData.confirmPassword) {
+      setPasswordError("Passwords do not match!");
+      return;
+    }
+
+    // Password length validation
+    if (formData.password.length < 6) {
+      setPasswordError("Password must be at least 6 characters long!");
+      return;
+    }
+
+    // Create FormData object for submission
+    const submitData = new FormData();
+
+    // Append all text fields
+    submitData.append("firstName", formData.firstName);
+    submitData.append("lastName", formData.lastName);
+    submitData.append("address", formData.address);
+    submitData.append("city", formData.city);
+    submitData.append("state", formData.state);
+    submitData.append("zip", formData.zip);
+    submitData.append("email", formData.email);
+    submitData.append("managerId", formData.managerId);
+    submitData.append("phone", formData.phone);
+    submitData.append("password", formData.password);
+
+    // Append profile image if exists
+    if (formData.profileImage) {
+      submitData.append("managerProfileImage", formData.profileImage);
+    }
+
+    // Call the onSubmit prop with the FormData
+    onSubmit(submitData);
+
   };
 
   return (
@@ -52,22 +96,38 @@ const CreateManager = ({ onSubmit }) => {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Name */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Name
-          </label>
-          <input
-            type="text"
-            name="name"
-            value={formData.name}
-            onChange={handleChange}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#e91e63]"
-            placeholder="John Doe"
-            required
-          />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              First Name
+            </label>
+            <input
+              type="text"
+              name="firstName"
+              value={formData.firstName}
+              onChange={handleChange}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#e91e63]"
+              placeholder="First Name"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Last Name
+            </label>
+            <input
+              type="text"
+              name="lastName"
+              value={formData.lastName}
+              onChange={handleChange}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#e91e63]"
+              placeholder="Last Name"
+              required
+            />
+          </div>
         </div>
 
-        {/* Address & Zip */}
+        {/* Address & City */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -99,7 +159,7 @@ const CreateManager = ({ onSubmit }) => {
           </div>
         </div>
 
-        {/* City & State */}
+        {/* State & Zip */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -121,8 +181,8 @@ const CreateManager = ({ onSubmit }) => {
             </label>
             <input
               type="text"
-              name="city"
-              value={formData.city}
+              name="zip"
+              value={formData.zip}
               onChange={handleChange}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#e91e63]"
               placeholder="Zip Code"
@@ -147,32 +207,48 @@ const CreateManager = ({ onSubmit }) => {
           />
         </div>
 
-        {/* Manager ID */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Create ID#
-          </label>
-          <input
-            type="text"
-            name="managerId"
-            value={formData.managerId}
-            onChange={handleChange}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#e91e63]"
-            placeholder="252 441 654"
-            required
-          />
+        {/* Manager ID & Phone */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Create ID#
+            </label>
+            <input
+              type="text"
+              name="managerId"
+              value={formData.managerId}
+              onChange={handleChange}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#e91e63]"
+              placeholder="252 441 654"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Phone
+            </label>
+            <input
+              type="text"
+              name="phone"
+              value={formData.phone}
+              onChange={handleChange}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:border-[#e91e63]"
+              placeholder="+1 234 567 8901"
+              required
+            />
+          </div>
         </div>
 
         {/* Passwords */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="relative">
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              New Password
+              Password
             </label>
             <input
               type={showPassword ? "text" : "password"}
-              name="newPassword"
-              value={formData.newPassword}
+              name="password"
+              value={formData.password}
               onChange={handleChange}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 pr-10 focus:outline-none focus:border-[#e91e63]"
               placeholder="Enter password"
@@ -215,6 +291,13 @@ const CreateManager = ({ onSubmit }) => {
             </span>
           </div>
         </div>
+
+        {/* Password Error Message */}
+        {passwordError && (
+          <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-2 rounded-lg text-sm">
+            {passwordError}
+          </div>
+        )}
 
         {/* Upload */}
         <div>

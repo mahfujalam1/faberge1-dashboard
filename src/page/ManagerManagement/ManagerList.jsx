@@ -1,12 +1,13 @@
-
 import { LockOutlined } from "@ant-design/icons";
 import { ScaleLoader } from "react-spinners";
 
-const ManagerList = ({ onDelete, onOpenAccess, managers, isLoading }) => {
+const ManagerList = ({ onDelete, onOpenAccess, managers, isLoading, searchValue, setSearchValue }) => {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-pink-100 p-4">
       <div className="mb-4">
         <input
+          value={searchValue}
+          onChange={(e) => setSearchValue(e.target.value)}
           type="text"
           placeholder="Search managers..."
           className="w-full border border-pink-200 rounded-md px-3 py-2 focus:outline-none focus:border-[#e91e63]"

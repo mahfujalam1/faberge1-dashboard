@@ -4,8 +4,8 @@ import { tagTypes } from "../../tagTypes";
 const superAdmin = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getAllManagers: builder.query({
-      query: () => ({
-        url: `/manager/get-all-managers`,
+      query: (searchValue) => ({
+        url: `/manager/get-all-managers?search=${searchValue}`,
         method: "GET",
       }),
       providesTags: [tagTypes.managers],

@@ -12,9 +12,10 @@ import {
 const ManagerManagement = () => {
   const [selectedManager, setSelectedManager] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
 
   // Fetch all managers from the backend
-  const { data, isLoading, isError } = useGetAllManagersQuery();
+  const { data, isLoading, isError } = useGetAllManagersQuery(searchValue);
   const managers = data?.data;
 
   // Hooks for mutation
@@ -62,7 +63,6 @@ const ManagerManagement = () => {
     }
   };
 
-
   return (
     <div className="p-6 min-h-screen overflow-x-auto md:w-[420px] lg:w-[680px] xl:w-full">
       <div className="flex justify-between items-center mb-4">
@@ -77,7 +77,9 @@ const ManagerManagement = () => {
       </div>
 
       <ManagerList
-      isLoading={isLoading}
+        searchValue={searchValue}
+        setSearchValue={setSearchValue}
+        isLoading={isLoading}
         managers={managers}
         onDelete={handleDeleteManager} // Directly delete when button is clicked
         onOpenAccess={handleOpenAccess}

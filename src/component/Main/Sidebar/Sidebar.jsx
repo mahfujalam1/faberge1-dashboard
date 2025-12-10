@@ -21,6 +21,7 @@ import { toast } from "sonner";
 import ConfirmationModal from "../../ui/Modals/ConfirmationModal";
 import { SiTheconversation } from "react-icons/si";
 import { useGetSingleManagerQuery } from "../../../redux/features/dashboard/dashboardApi";
+import { ScaleLoader } from "react-spinners";
 
 const menuItems = [
   {
@@ -104,7 +105,7 @@ const menuItems = [
 ];
 
 const Sidebar = () => {
-  const { data } = useGetSingleManagerQuery();
+  const { data, isLoading } = useGetSingleManagerQuery();
   const managerItem = data;
   console.log(managerItem);
   const [isOpen, setIsOpen] = useState(false);
@@ -126,7 +127,6 @@ const Sidebar = () => {
           (item) => managerItem?.accessibility?.[item?.accessKey] === true // Filter for manager
         );
 
-  console.log(accessibleMenuItems);
 
   return (
     <>
@@ -170,6 +170,11 @@ const Sidebar = () => {
                 <span className="text-xl">{item.name}</span>
               </NavLink>
             ))}
+            {isLoading && (
+              <div className="flex items-center justify-center text-center py-5">
+                <ScaleLoader color="#ffff" />
+              </div>
+            )}
           </ul>
 
           {/* Logout Button */}

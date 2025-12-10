@@ -1,4 +1,5 @@
 import { baseApi } from "../../baseApi/baseApi";
+import { tagTypes } from "../../tagTypes";
 
 const authApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -8,6 +9,7 @@ const authApi = baseApi.injectEndpoints({
         method: "POST",
         body: data,
       }),
+      invalidatesTags: [tagTypes.managers, tagTypes.users],
     }),
     register: builder.mutation({
       query: (data) => ({

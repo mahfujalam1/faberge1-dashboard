@@ -60,41 +60,52 @@ const ServicePage = () => {
           </thead>
           {!isLoading ? (
             <tbody>
-              {services?.map((service) => (
-                <tr
-                  key={service._id}
-                  className="border-b border-pink-100 hover:bg-pink-50 transition-all"
-                >
-                  <td className="px-6 py-3">
-                    <div>
-                      <p className="font-medium">{service.serviceName}</p>
-                      {/* Show sub-services if any */}
-                    </div>
-                  </td>
-                  <td className="px-6 py-3">${service.price}</td>
-                  <td className="px-6 py-3">
-                    {service.subcategory?.length > 0 && (
-                      <ul className="text-xs text-gray-500 mt-1 list-disc ml-5">
-                        {service.subcategory.map((sub, idx) => (
-                          <li key={idx}>
-                            {sub.subcategoryName} — ${sub.subcategoryPrice}
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </td>
-                  <td className="px-6 py-3 text-right flex justify-end gap-4 text-[#e91e63]">
-                    <EditOutlined
-                      onClick={() => handleUpdate(service)}
-                      className="cursor-pointer hover:text-pink-500 text-lg"
-                    />
-                    <DeleteOutlined
-                      onClick={() => handleDelete(service._id)}
-                      className="cursor-pointer hover:text-red-500 text-lg"
-                    />
+              {services?.length > 0 ? (
+                services?.map((service) => (
+                  <tr
+                    key={service._id}
+                    className="border-b border-pink-100 hover:bg-pink-50 transition-all"
+                  >
+                    <td className="px-6 py-3">
+                      <div>
+                        <p className="font-medium">{service.serviceName}</p>
+                        {/* Show sub-services if any */}
+                      </div>
+                    </td>
+                    <td className="px-6 py-3">${service.price}</td>
+                    <td className="px-6 py-3">
+                      {service.subcategory?.length > 0 && (
+                        <ul className="text-xs text-gray-500 mt-1 list-disc ml-5">
+                          {service.subcategory.map((sub, idx) => (
+                            <li key={idx}>
+                              {sub.subcategoryName} — ${sub.subcategoryPrice}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </td>
+                    <td className="px-6 py-3 text-right flex justify-end gap-4 text-[#e91e63]">
+                      <EditOutlined
+                        onClick={() => handleUpdate(service)}
+                        className="cursor-pointer hover:text-pink-500 text-lg"
+                      />
+                      <DeleteOutlined
+                        onClick={() => handleDelete(service._id)}
+                        className="cursor-pointer hover:text-red-500 text-lg"
+                      />
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan="6"
+                    className="text-center py-6 text-gray-500 text-sm"
+                  >
+                    No Service found
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           ) : (
             <tbody>

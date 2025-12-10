@@ -1,4 +1,4 @@
-import React from "react";
+import { useMemo } from "react";
 import {
   AreaChart,
   Area,
@@ -8,23 +8,48 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { useBookingRevenueQuery } from "../../../redux/features/analytics/analytics";
 
-const data = [
-  { name: "Ja", value: 400 },
-  { name: "Fe", value: 320 },
-  { name: "Ma", value: 540 },
-  { name: "Ap", value: 180 },
-  { name: "My", value: 200 },
-  { name: "Ju", value: 300 },
-  { name: "Jl", value: 350 },
-  { name: "Au", value: 470 },
-  { name: "Se", value: 430 },
-  { name: "Oc", value: 410 },
-  { name: "No", value: 480 },
-  { name: "De", value: 560 },
-];
+// Helper function to calculate Y-axis max (highest value + 30%)
+const calculateYAxisMax = (data, dataKey) => {
+  if (!data || data.length === 0) return 100;
+  const maxValue = Math.max(...data.map((item) => item[dataKey] || 0));
+  return Math.ceil(maxValue * 1.3); // 30% more than highest value
+};
+
+// Helper function to generate Y-axis ticks
+const generateYAxisTicks = (maxValue) => {
+  const step = Math.ceil(maxValue / 4);
+  return [0, step, step * 2, step * 3, maxValue];
+};
 
 const RevenueReportChart = () => {
+  const { data } = useBookingRevenueQuery();
+  const bookingRevenue = data;
+  console.log(bookingRevenue)
+
+  // Prepare revenue data from API
+  const revenueData = useMemo(() => {
+    return (
+      bookingRevenue?.revenue?.map((item) => ({
+        name: item.month,
+        value: item.revenue,
+      })) || []
+    );
+  }, [bookingRevenue]);
+
+  // Calculate Y-axis max value
+  const revenueYMax = useMemo(
+    () => calculateYAxisMax(revenueData, "value"),
+    [revenueData]
+  );
+
+  // Generate ticks
+  const revenueTicks = useMemo(
+    () => generateYAxisTicks(revenueYMax),
+    [revenueYMax]
+  );
+
   return (
     <div className="bg-white shadow-sm rounded-xl p-4 border border-pink-100">
       <h3 className="text-sm font-semibold text-gray-700 mb-2">
@@ -33,7 +58,7 @@ const RevenueReportChart = () => {
 
       <ResponsiveContainer width="100%" height={250}>
         <AreaChart
-          data={data}
+          data={revenueData}
           margin={{ top: 10, right: 20, left: 0, bottom: 0 }}
         >
           <defs>
@@ -55,12 +80,12 @@ const RevenueReportChart = () => {
             tickLine={false}
           />
           <YAxis
-            ticks={[0, 150, 300, 450, 600]}
-            domain={[0, 600]}
+            ticks={revenueTicks}
+            domain={[0, revenueYMax]}
             tick={{ fill: "#666", fontSize: 12 }}
             axisLine={false}
             tickLine={false}
-            tickFormatter={(val) => (val === 600 ? "Ꝏ" : val)}
+            tickFormatter={(val) => (val === revenueYMax ? "Ꝏ" : val)}
           />
           <Tooltip
             cursor={{ stroke: "#e91e63", strokeWidth: 1 }}

@@ -1,7 +1,8 @@
-import React from "react";
-import { DeleteOutlined, LockOutlined } from "@ant-design/icons";
 
-const ManagerList = ({ onDelete, onOpenAccess, managers }) => {
+import { LockOutlined } from "@ant-design/icons";
+import { ScaleLoader } from "react-spinners";
+
+const ManagerList = ({ onDelete, onOpenAccess, managers, isLoading }) => {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-pink-100 p-4">
       <div className="mb-4">
@@ -88,7 +89,13 @@ const ManagerList = ({ onDelete, onOpenAccess, managers }) => {
                   colSpan="6"
                   className="text-center py-6 text-gray-500 text-sm"
                 >
-                  No managers found
+                  {isLoading ? (
+                    <div className="flex items-center justify-center text-center">
+                      <ScaleLoader color="#ff0db4" />
+                    </div>
+                  ) : (
+                    "No Manager found"
+                  )}
                 </td>
               </tr>
             )}

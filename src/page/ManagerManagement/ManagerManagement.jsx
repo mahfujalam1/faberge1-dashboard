@@ -62,8 +62,6 @@ const ManagerManagement = () => {
     }
   };
 
-  if (isLoading) return <div>Loading...</div>;
-  if (isError) return <div>Error loading managers</div>;
 
   return (
     <div className="p-6 min-h-screen overflow-x-auto md:w-[420px] lg:w-[680px] xl:w-full">
@@ -79,6 +77,7 @@ const ManagerManagement = () => {
       </div>
 
       <ManagerList
+      isLoading={isLoading}
         managers={managers}
         onDelete={handleDeleteManager} // Directly delete when button is clicked
         onOpenAccess={handleOpenAccess}

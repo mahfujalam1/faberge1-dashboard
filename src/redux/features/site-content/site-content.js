@@ -23,7 +23,7 @@ const siteContent = baseApi.injectEndpoints({
     // service
     createService: builder.mutation({
       query: (data) => ({
-        url: "/photo/create-dynamic-photo",
+        url: "/photo/create-dynamic-photo-or-video",
         method: "POST",
         body: data,
       }),

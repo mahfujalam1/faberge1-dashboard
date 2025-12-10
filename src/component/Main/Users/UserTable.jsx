@@ -3,6 +3,7 @@ import { Input, Button } from "antd";
 import { useState } from "react";
 import { useGetAllUsersQuery } from "../../../redux/features/user/userApi";
 import UserDetailsModal from "../../ui/Modals/UserDetailsModal";
+import { ScaleLoader } from "react-spinners";
 
 const UserTable = () => {
   const [searchValue, setSearchValue] = useState(""); // Search term for filtering
@@ -23,6 +24,11 @@ const UserTable = () => {
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
+  };
+
+  const handleViewCustomer = (data) => {
+    setOpenModal(true);
+    setDetailsData(data);
   };
 
   // Pagination logic
@@ -78,6 +84,7 @@ const UserTable = () => {
               <th className="px-6 py-3 w-[160px]">Location</th>
               <th className="px-6 py-3 w-[240px]">Email</th>
               <th className="px-6 py-3 w-[160px]">Phone</th>
+              <th className="px-6 py-3 w-[160px]">Status</th>
               <th className="px-6 py-3 text-center w-[100px]">Actions</th>
             </tr>
           </thead>
@@ -110,6 +117,17 @@ const UserTable = () => {
                   <td className="px-6 py-3 w-[160px]">{user.address}</td>
                   <td className="px-6 py-3 w-[240px]">{user.email}</td>
                   <td className="px-6 py-3 w-[160px]">{user.phone}</td>
+                  <td className="px-6 py-3 w-[120px]">
+                    <span
+                      className={`${
+                        user?.isBlocked
+                          ? "bg-red-200 text-red-600 text-xs px-3 py-1 rounded-full"
+                          : "bg-green-100 text-green-700 text-xs px-3 py-1 rounded-full"
+                      }`}
+                    >
+                      {user?.isBlocked ? "Blocked" : "Active"}
+                    </span>
+                  </td>
 
                   {/* Actions */}
                   <td className="px-6 py-3 text-right flex justify-center gap-4 text-[#e91e63]">
@@ -122,8 +140,17 @@ const UserTable = () => {
               ))
             ) : (
               <tr>
-                <td colSpan={5} className="text-center py-6 text-gray-500">
-                  No Customers found.
+                <td
+                  colSpan="6"
+                  className="text-center py-6 text-gray-500 text-sm"
+                >
+                  {isLoading ? (
+                    <div className="flex items-center justify-center text-center">
+                      <ScaleLoader color="#ff0db4" />
+                    </div>
+                  ) : (
+                    "No Customer found"
+                  )}
                 </td>
               </tr>
             )}

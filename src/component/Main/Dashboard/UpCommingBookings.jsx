@@ -5,10 +5,11 @@ import ConfirmationModal from "../../ui/Modals/ConfirmationModal";
 import UserDetailsModal from "../../ui/Modals/UserDetailsModal"; // ✅ import modal
 import { useGetUpcomingBookingsQuery } from "../../../redux/features/dashboard/dashboardApi";
 import BookingDetailsModal from "../../ui/Modals/BookingDetailsModal";
+import { ScaleLoader } from "react-spinners";
 
 const UpcomingBooking = () => {
   const navigate = useNavigate();
-  const { data } = useGetUpcomingBookingsQuery();
+  const { data, isLoading } = useGetUpcomingBookingsQuery();
   const bookings = data?.data;
 
   // ✅ for viewing user details
@@ -78,7 +79,7 @@ const UpcomingBooking = () => {
                     <div className="flex items-center gap-3">
                       <img
                         src={
-                          booking.uploadPhoto ||
+                          booking?.customer?.uploadPhoto ||
                           "https://avatar.iran.liara.run/public/19"
                         }
                         alt={booking?.customer?.firstName}
@@ -139,7 +140,13 @@ const UpcomingBooking = () => {
                   colSpan="6"
                   className="text-center py-6 text-gray-500 text-sm"
                 >
-                  No bookings found
+                  {isLoading ? (
+                    <div className="flex items-center justify-center text-center">
+                      <ScaleLoader color="#ff0db4" />
+                    </div>
+                  ) : (
+                    "No Upcoming Booking found"
+                  )}
                 </td>
               </tr>
             )}

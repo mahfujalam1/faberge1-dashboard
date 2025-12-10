@@ -2,8 +2,8 @@ import { EyeOutlined, DeleteOutlined, SearchOutlined } from "@ant-design/icons";
 import { Input, Button } from "antd";
 import { useState } from "react";
 import BookingDetailsModal from "../../component/ui/Modals/BookingDetailsModal";
-import ConfirmationModal from "../../component/ui/Modals/ConfirmationModal";
 import { useGetAllBookingsQuery } from "../../redux/features/booking/booking";
+import { ScaleLoader } from "react-spinners";
 
 const BookingsPage = () => {
   const [currentPage, setCurrentPage] = useState(1); // State to hold the current page
@@ -11,7 +11,7 @@ const BookingsPage = () => {
   const [selectedBooking, setSelectedBooking] = useState(null);
 
   // Fetch data based on current page and search value
-  const limit = 10
+  const limit = 10;
   const { data, isLoading } = useGetAllBookingsQuery({
     page: currentPage,
     limit,
@@ -19,6 +19,7 @@ const BookingsPage = () => {
   });
   const bookings = data?.data;
   const pagination = data?.pagination;
+  console.log(bookings);
 
   const filteredBookings = bookings?.filter((b) =>
     b.customer?.firstName.toLowerCase().includes(searchValue.toLowerCase())
@@ -130,14 +131,14 @@ const BookingsPage = () => {
               {filteredBookings?.length > 0 ? (
                 filteredBookings?.map((booking) => (
                   <tr
-                    key={booking._id}
+                    key={booking?._id}
                     className="border-b border-pink-100 hover:bg-pink-50 transition-all"
                   >
                     <td className="px-6 py-3">
                       <div className="flex items-center gap-3">
                         <img
                           src={
-                            booking.uploadPhoto ||
+                            booking?.customer?.uploadPhoto ||
                             "https://avatar.iran.liara.run/public/19"
                           }
                           alt={booking?.customer?.firstName}
@@ -171,15 +172,15 @@ const BookingsPage = () => {
                     </td>
 
                     <td className="px-6 py-3 text-gray-600">
-                      {formatDateTime(booking.date)}
+                      {formatDateTime(booking.createdAt)}
                     </td>
 
                     <td className="px-6 py-3">
                       <span
                         className={`text-xs px-3 py-1 rounded-full font-medium ${
-                          booking.status === "Completed"
+                          booking.status === "completed"
                             ? "bg-green-100 text-green-700"
-                            : booking.status === "Pending"
+                            : booking.status === "pending"
                             ? "bg-yellow-100 text-yellow-700"
                             : "bg-red-100 text-red-700"
                         }`}
@@ -204,7 +205,13 @@ const BookingsPage = () => {
                     colSpan="6"
                     className="text-center py-6 text-gray-500 text-sm"
                   >
-                    No bookings found
+                    {isLoading ? (
+                      <div className="flex items-center justify-center text-center">
+                        <ScaleLoader color="#ff0db4" />
+                      </div>
+                    ) : (
+                      "No bookings found"
+                    )}
                   </td>
                 </tr>
               )}
@@ -212,7 +219,6 @@ const BookingsPage = () => {
           </table>
         </div>
 
-        {/* Pagination */}
         <div className="flex justify-center items-center space-x-4 py-4">
           <Button
             onClick={handlePreviousPage}

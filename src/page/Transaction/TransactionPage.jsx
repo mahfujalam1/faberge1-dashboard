@@ -1,7 +1,8 @@
+import { ScaleLoader } from "react-spinners";
 import { useGetAllTransactionsQuery } from "../../redux/features/booking/booking";
 
 const TransactionsPage = () => {
-  const { data } = useGetAllTransactionsQuery();
+  const { data, isLoading } = useGetAllTransactionsQuery();
   const mockTransactions = data?.transactions;
   console.log(mockTransactions);
 
@@ -37,59 +38,76 @@ const TransactionsPage = () => {
           </thead>
 
           <tbody>
-            {mockTransactions?.map((item) => (
-              <tr
-                key={item?._id}
-                className="border-b border-pink-100 hover:bg-pink-50 transition-all"
-              >
-                {/* User Name */}
-                <td className="px-6 py-3 flex items-center gap-3">
-                  <img
-                    src={
-                      item?.worker?.uploadPhoto &&
-                      item?.worker?.uploadPhoto ===
-                        "http://10.10.20.16:5137undefined"
-                        ? "https://avatar.iran.liara.run/public/39"
-                        : item?.worker?.uploadPhoto
-                    }
-                    alt={item?.worker?.firstName}
-                    className="w-9 h-9 rounded-full object-cover"
-                  />
-                  <span className="text-[#e91e63] font-medium cursor-pointer hover:underline">
-                    {item?.worker?.firstName + " " + item?.worker?.lastName}
-                  </span>
-                </td>
+            {mockTransactions?.length > 0 ? (
+              mockTransactions?.map((item) => (
+                <tr
+                  key={item?._id}
+                  className="border-b border-pink-100 hover:bg-pink-50 transition-all"
+                >
+                  {/* User Name */}
+                  <td className="px-6 py-3 flex items-center gap-3">
+                    <img
+                      src={
+                        item?.worker?.uploadPhoto &&
+                        item?.worker?.uploadPhoto ===
+                          "http://10.10.20.16:5137undefined"
+                          ? "https://avatar.iran.liara.run/public/39"
+                          : item?.worker?.uploadPhoto
+                      }
+                      alt={item?.worker?.firstName}
+                      className="w-9 h-9 rounded-full object-cover"
+                    />
+                    <span className="text-[#e91e63] font-medium cursor-pointer hover:underline">
+                      {item?.worker?.firstName + " " + item?.worker?.lastName}
+                    </span>
+                  </td>
 
-                {/* Service */}
-                <td className="px-6 py-3 text-gray-700">
-                  {item?.services?.map((service) => (
-                    <ul key={service?.service?._id}>
-                      <li>{service?.service?.serviceName}</li>
-                    </ul>
-                  ))}
-                </td>
+                  {/* Service */}
+                  <td className="px-6 py-3 text-gray-700">
+                    {item?.services?.map((service) => (
+                      <ul key={service?.service?._id}>
+                        <li>{service?.service?.serviceName}</li>
+                      </ul>
+                    ))}
+                  </td>
 
-                {/* Date */}
-                <td className="px-6 py-3 text-gray-600">
-                  {formatDateTime(item?.date)}
-                </td>
+                  {/* Date */}
+                  <td className="px-6 py-3 text-gray-600">
+                    {formatDateTime(item?.createdAt)}
+                  </td>
 
-                {/* Payment Method */}
-                <td className="px-6 py-3 text-gray-700">
-                  <span className="font-medium">Stripe</span>
-                </td>
+                  {/* Payment Method */}
+                  <td className="px-6 py-3 text-gray-700">
+                    <span className="font-medium">Stripe</span>
+                  </td>
 
-                {/* Amount */}
-                <td className="px-6 py-3 font-semibold text-gray-800">
-                  {item?.paymentAmount}
-                </td>
+                  {/* Amount */}
+                  <td className="px-6 py-3 font-semibold text-gray-800">
+                    ${item?.paymentAmount}
+                  </td>
 
-                {/* Transaction ID */}
-                <td className="px-6 py-3 text-gray-600 font-mono">
-                  {item?.transactionId}
+                  {/* Transaction ID */}
+                  <td className="px-6 py-3 text-gray-600 font-mono">
+                    {item?.transactionId}
+                  </td>
+                </tr>
+              ))
+            ) : (
+              <tr>
+                <td
+                  colSpan="6"
+                  className="text-center py-6 text-gray-500 text-sm"
+                >
+                  {isLoading ? (
+                    <div className="flex items-center justify-center text-center">
+                      <ScaleLoader color="#ff0db4" />
+                    </div>
+                  ) : (
+                    "No Transaction found"
+                  )}
                 </td>
               </tr>
-            ))}
+            )}
           </tbody>
         </table>
       </div>

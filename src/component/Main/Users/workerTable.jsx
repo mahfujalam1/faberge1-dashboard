@@ -3,6 +3,7 @@ import { Input, Button } from "antd";
 import { useState } from "react";
 import { useGetAllWorkersQuery } from "../../../redux/features/worker/worker";
 import UserDetailsModal from "../../ui/Modals/UserDetailsModal";
+import { ScaleLoader } from "react-spinners";
 
 const WorkerTable = () => {
   const [searchValue, setSearchValue] = useState(""); // Search term for filtering
@@ -152,8 +153,17 @@ const WorkerTable = () => {
               ))
             ) : (
               <tr>
-                <td colSpan={7} className="text-center py-6 text-gray-500">
-                  No Workers found.
+                <td
+                  colSpan="6"
+                  className="text-center py-6 text-gray-500 text-sm"
+                >
+                  {isLoading ? (
+                    <div className="flex items-center justify-center text-center">
+                      <ScaleLoader color="#ff0db4" />
+                    </div>
+                  ) : (
+                    "No Worker found"
+                  )}
                 </td>
               </tr>
             )}

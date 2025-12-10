@@ -8,7 +8,7 @@ import {
 
 const ServiceBanner = ({ onClose }) => {
   const [createService, { isLoading }] = useCreateServiceMutation();
-  const { data } = useGetDynamicBannerQuery();
+  const { data, refetch } = useGetDynamicBannerQuery();
   const bannerData = data?.data;
 
   // Manicure states
@@ -21,15 +21,44 @@ const ServiceBanner = ({ onClose }) => {
   const [pedicurePreview, setPedicurePreview] = useState(null);
   const pedicureRef = useRef(null);
 
+  // ✅ Cleanup preview URLs on unmount
+  useEffect(() => {
+    return () => {
+      if (manicurePreview) URL.revokeObjectURL(manicurePreview);
+      if (pedicurePreview) URL.revokeObjectURL(pedicurePreview);
+    };
+  }, [manicurePreview, pedicurePreview]);
+
   const handleServiceUpload = (type, e) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    // ✅ Validate file type
+    const isImage = file.type.startsWith("image/");
+    const isVideo = file.type.startsWith("video/");
+
+    if (!isImage && !isVideo) {
+      message.error("Please upload only image or video files!");
+      return;
+    }
+
+    // ✅ Validate file size (max 50MB)
+    const maxSize = 50 * 1024 * 1024;
+    if (file.size > maxSize) {
+      message.error("File size must be less than 50MB!");
+      return;
+    }
+
     const url = URL.createObjectURL(file);
 
     if (type === "manicure") {
+      // Cleanup old preview
+      if (manicurePreview) URL.revokeObjectURL(manicurePreview);
       setManicureBanner(file);
       setManicurePreview(url);
     } else {
+      // Cleanup old preview
+      if (pedicurePreview) URL.revokeObjectURL(pedicurePreview);
       setPedicureBanner(file);
       setPedicurePreview(url);
     }
@@ -44,14 +73,14 @@ const ServiceBanner = ({ onClose }) => {
           message.error("Please select a file for the Manicure banner!");
           return;
         }
-        title = "Manicure"; // Default title for manicure
+        title = "Manicure";
         file = manicureBanner;
       } else {
         if (!pedicureBanner) {
           message.error("Please select a file for the Pedicure banner!");
           return;
         }
-        title = "Pedicure"; // Default title for pedicure
+        title = "Pedicure";
         file = pedicureBanner;
       }
 
@@ -59,39 +88,115 @@ const ServiceBanner = ({ onClose }) => {
       formData.append("title", title);
       formData.append("dynamicUpload", file);
 
+      // ✅ Log for debugging
+      console.log(`Uploading ${type} banner:`, {
+        name: file.name,
+        type: file.type,
+        size: file.size,
+      });
+
       const response = await createService(formData).unwrap();
-      message.success(`${type} banner uploaded successfully!`);
+      message.success(
+        response?.message || `${type} banner uploaded successfully!`
+      );
+
+      // ✅ Refetch to get updated banners
+      await refetch();
 
       // Reset specific service state
       if (type === "manicure") {
+        if (manicurePreview) URL.revokeObjectURL(manicurePreview);
         setManicureBanner(null);
         setManicurePreview(null);
       } else {
+        if (pedicurePreview) URL.revokeObjectURL(pedicurePreview);
         setPedicureBanner(null);
         setPedicurePreview(null);
       }
     } catch (error) {
-      message.error("Failed to upload service banner!");
+      console.error("Upload error:", error);
+      const errorMessage =
+        error?.data?.message ||
+        error?.message ||
+        "Failed to upload service banner!";
+      message.error(errorMessage);
     }
   };
 
-  // Preview images or videos from bannerData (if available)
-  const getBannerPreview = (type) => {
-    const banner = bannerData?.find(
-      (item) => item.title.toLowerCase() === type
-    );
-    if (banner) {
-      return banner?.video?.startsWith("video/") ? (
-        <video src={banner?.video} controls className="h-40 rounded-lg" />
+  // ✅ Fixed: Render preview for new upload or existing banner
+  const renderBannerPreview = (type) => {
+    // Show new upload preview if available
+    if (type === "manicure" && manicurePreview && manicureBanner) {
+      const isVideo = manicureBanner.type.startsWith("video/");
+      return isVideo ? (
+        <video
+          src={manicurePreview}
+          controls
+          className="h-40 rounded-lg max-w-full"
+        />
       ) : (
         <img
-          src={banner?.image}
-          alt="Preview"
-          className="h-40 rounded-lg object-cover"
+          src={manicurePreview}
+          alt="Manicure Preview"
+          className="h-40 rounded-lg object-cover max-w-full"
         />
       );
     }
-    return null;
+
+    if (type === "pedicure" && pedicurePreview && pedicureBanner) {
+      const isVideo = pedicureBanner.type.startsWith("video/");
+      return isVideo ? (
+        <video
+          src={pedicurePreview}
+          controls
+          className="h-40 rounded-lg max-w-full"
+        />
+      ) : (
+        <img
+          src={pedicurePreview}
+          alt="Pedicure Preview"
+          className="h-40 rounded-lg object-cover max-w-full"
+        />
+      );
+    }
+
+    // Show existing banner from server
+    const banner = bannerData?.find(
+      (item) => item.title.toLowerCase() === type
+    );
+
+    if (banner) {
+      if (banner.video) {
+        return (
+          <video
+            src={banner.video}
+            controls
+            className="h-40 rounded-lg max-w-full"
+          />
+        );
+      } else if (banner.image) {
+        return (
+          <img
+            src={banner.image}
+            alt={`${type} Banner`}
+            className="h-40 rounded-lg object-cover max-w-full"
+          />
+        );
+      }
+    }
+
+    // Show upload prompt
+    return (
+      <>
+        <MdOutlineCloudUpload className="text-3xl text-[#e91e63] mb-2" />
+        <p className="text-sm text-gray-500">
+          Click to upload {type.charAt(0).toUpperCase() + type.slice(1)} banner
+        </p>
+        <p className="text-xs text-gray-400 mt-1">
+          Supports: Images & Videos (Max 50MB)
+        </p>
+      </>
+    );
   };
 
   return (
@@ -108,14 +213,7 @@ const ServiceBanner = ({ onClose }) => {
           onClick={() => manicureRef.current.click()}
           className="border-2 border-dashed border-pink-200 rounded-lg h-48 flex flex-col items-center justify-center cursor-pointer hover:bg-pink-50 transition-all"
         >
-          {getBannerPreview("manicure") || (
-            <>
-              <MdOutlineCloudUpload className="text-3xl text-[#e91e63] mb-2" />
-              <p className="text-sm text-gray-500">
-                Click to upload Manicure banner
-              </p>
-            </>
-          )}
+          {renderBannerPreview("manicure")}
         </div>
 
         <input
@@ -125,6 +223,16 @@ const ServiceBanner = ({ onClose }) => {
           accept="image/*,video/*"
           className="hidden"
         />
+
+        {/* ✅ Show selected file info */}
+        {manicureBanner && (
+          <div className="mt-2 text-sm text-gray-600">
+            Selected: <span className="font-medium">{manicureBanner.name}</span>
+            <span className="text-gray-400 ml-2">
+              ({(manicureBanner.size / (1024 * 1024)).toFixed(2)} MB)
+            </span>
+          </div>
+        )}
 
         <div className="mt-4 text-right">
           <button
@@ -145,14 +253,7 @@ const ServiceBanner = ({ onClose }) => {
           onClick={() => pedicureRef.current.click()}
           className="border-2 border-dashed border-pink-200 rounded-lg h-48 flex flex-col items-center justify-center cursor-pointer hover:bg-pink-50 transition-all"
         >
-          {getBannerPreview("pedicure") || (
-            <>
-              <MdOutlineCloudUpload className="text-3xl text-[#e91e63] mb-2" />
-              <p className="text-sm text-gray-500">
-                Click to upload Pedicure banner
-              </p>
-            </>
-          )}
+          {renderBannerPreview("pedicure")}
         </div>
 
         <input
@@ -162,6 +263,16 @@ const ServiceBanner = ({ onClose }) => {
           accept="image/*,video/*"
           className="hidden"
         />
+
+        {/* ✅ Show selected file info */}
+        {pedicureBanner && (
+          <div className="mt-2 text-sm text-gray-600">
+            Selected: <span className="font-medium">{pedicureBanner.name}</span>
+            <span className="text-gray-400 ml-2">
+              ({(pedicureBanner.size / (1024 * 1024)).toFixed(2)} MB)
+            </span>
+          </div>
+        )}
 
         <div className="mt-4 text-right">
           <button

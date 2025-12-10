@@ -20,6 +20,7 @@ import {
   FaGavel,
 } from "react-icons/fa";
 import { toast } from "sonner";
+import { ScaleLoader } from "react-spinners";
 
 // Complete module icons and labels matching sidebar (all with "Show")
 const moduleMapping = {
@@ -82,7 +83,11 @@ const AccessibilityList = ({ managers }) => {
   }, [isError]);
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex items-center justify-center">
+        <ScaleLoader color="#ff007a" />
+      </div>
+    );
   }
 
   if (isError || !data?.data) {

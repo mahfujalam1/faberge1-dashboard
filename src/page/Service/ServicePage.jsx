@@ -1,24 +1,45 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import UpdateServiceModal from "../../component/ui/Modals/UpdateServiceModal";
-import ConfirmationModal from "../../component/ui/Modals/ConfirmationModal";
 import AddServiceModal from "../../component/ui/Modals/AddServiceModal";
-import { allServices } from "../../constants/service";
-import { Button, Skeleton, Tooltip } from "antd";
+import { Skeleton, Tooltip } from "antd";
 import {
   useDeleteServiceMutation,
   useGetAllServicesQuery,
+  useGetCurrentServiceTimeQuery,
+  useUpdateServiceTimeMutation,
 } from "../../redux/features/service/service";
 import { toast } from "sonner";
+import UpdateServiceTimeModal from "../../component/ui/Modals/UpdateServiceTimeModal";
 
 const ServicePage = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showTimeModal, setShowTimeModal] = useState(false);
   const [service, setService] = useState({});
+  const [currentServiceTime, setCurrentServiceTime] = useState({
+    startTime: "09:00",
+    endTime: "19:00",
+  });
+
+  const { data: timeData } = useGetCurrentServiceTimeQuery();
+  const serviceTime = timeData?.data;
 
   const { data, isLoading } = useGetAllServicesQuery({});
   const [deleteService] = useDeleteServiceMutation();
+  const [updateServiceTime, { isLoading: timeUpdateLoading }] =
+    useUpdateServiceTimeMutation();
   const services = data?.data;
+
+  // Set service time from API when data is fetched
+  useEffect(() => {
+    if (serviceTime) {
+      setCurrentServiceTime({
+        startTime: serviceTime.startTime || "09:00",
+        endTime: serviceTime.endTime || "19:00",
+      });
+    }
+  }, [serviceTime]);
 
   const handleUpdate = (service) => {
     setService(service);
@@ -31,6 +52,22 @@ const ServicePage = () => {
       toast.success(res?.data?.message);
     } catch (err) {
       toast.error(err.message);
+      console.log(err);
+    }
+  };
+
+  const handleOpenTimeModal = () => {
+    setShowTimeModal(true);
+  };
+
+  const handleUpdateServiceTime = async (timeData) => {
+    try {
+      const res = await updateServiceTime(timeData).unwrap();
+      toast.success(res?.message || "Service time updated successfully");
+      setCurrentServiceTime(timeData);
+      setShowTimeModal(false);
+    } catch (err) {
+      toast.error(err?.data?.message || "Failed to update service time");
       console.log(err);
     }
   };
@@ -69,7 +106,6 @@ const ServicePage = () => {
                     <td className="px-6 py-3">
                       <div>
                         <p className="font-medium">{service.serviceName}</p>
-                        {/* Show sub-services if any */}
                       </div>
                     </td>
                     <td className="px-6 py-3">${service.price}</td>
@@ -118,19 +154,29 @@ const ServicePage = () => {
           )}
         </table>
       </div>
+
       <div className="mt-6">
-        <h1 className="text-xl font-semibold text-gray-800">Service Hours</h1>
-        <div className="flex items-center gap-2 mt-3">
+        <div className="flex items-center justify-between mb-3">
+          <h1 className="text-xl font-semibold text-gray-800">Service Hours</h1>
+        </div>
+        <div className="flex items-center gap-2">
           <Tooltip title="Service opening time">
             <div className="border-2 shadow border-pink-600 rounded-md px-4 py-2 bg-white">
-              Open 🕔 09:00 AM
+              Open 🕔 {currentServiceTime.startTime}
             </div>
           </Tooltip>
           <Tooltip title="Service closing time">
             <div className="border-2 shadow border-pink-600 rounded-md px-4 py-2 bg-white">
-              Close 🕔 07:00 PM
+              Close 🕔 {currentServiceTime.endTime}
             </div>
           </Tooltip>
+          <button
+            onClick={handleOpenTimeModal}
+            className="flex items-center gap-2 text-[#e91e63] hover:text-pink-600 transition-colors"
+          >
+            <EditOutlined className="text-lg" />
+            <span className="text-sm font-medium">Edit Time</span>
+          </button>
         </div>
       </div>
 
@@ -143,6 +189,14 @@ const ServicePage = () => {
       <AddServiceModal
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
+      />
+
+      <UpdateServiceTimeModal
+        isOpen={showTimeModal}
+        onClose={() => setShowTimeModal(false)}
+        currentTime={currentServiceTime}
+        onUpdate={handleUpdateServiceTime}
+        isLoading={timeUpdateLoading}
       />
     </div>
   );

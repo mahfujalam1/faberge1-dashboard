@@ -1,15 +1,21 @@
 import { EyeOutlined, DeleteOutlined, SearchOutlined } from "@ant-design/icons";
-import { Input, Button } from "antd";
+import { Input, Button, Popconfirm } from "antd";
 import { useState } from "react";
-import { useGetAllWorkersQuery } from "../../../redux/features/worker/worker";
+import {
+  useDeleteWorkerMutation,
+  useGetAllWorkersQuery,
+} from "../../../redux/features/worker/worker";
 import UserDetailsModal from "../../ui/Modals/UserDetailsModal";
 import { ScaleLoader } from "react-spinners";
+import { toast } from "sonner";
 
 const WorkerTable = () => {
   const [searchValue, setSearchValue] = useState(""); // Search term for filtering
   const [currentPage, setCurrentPage] = useState(1); // Page number for pagination
   const [openModal, setOpenModal] = useState(false); // Modal state for details
   const [detailsData, setDetailsData] = useState({}); // Store the details of selected worker
+
+  const [deleteWorker] = useDeleteWorkerMutation(); // Mutation hook for deleting a worker
 
   // Define page size (limit)
   const limit = 8;
@@ -27,6 +33,7 @@ const WorkerTable = () => {
   const handlePageChange = (page) => {
     setCurrentPage(page);
   };
+
   const handleViewWorker = (data) => {
     setOpenModal(true);
     setDetailsData(data);
@@ -65,6 +72,15 @@ const WorkerTable = () => {
     return buttons;
   };
 
+  const handleDeleteWorker =async (workerId) => {
+    const res = await deleteWorker(workerId); // Trigger the API call to delete the worker
+    if(res?.data.data){
+      toast.success(res?.data?.message)
+    }else if(res?.data?.error){
+      toast.error(res?.error?.message)
+    }
+  };
+
   return (
     <div className="bg-white rounded-xl shadow-sm border border-pink-100 mt-4">
       <div className="p-5 border-b border-pink-100">
@@ -93,38 +109,39 @@ const WorkerTable = () => {
 
           <tbody>
             {filteredData?.length > 0 ? (
-              filteredData?.map((user) => (
+              filteredData?.map((worker) => (
                 <tr
-                  key={user._id}
+                  key={worker._id}
                   className="hover:bg-pink-50 border-b border-pink-100 transition-all"
                 >
                   {/* Avatar + Name */}
                   <td className="px-6 py-3 flex items-center gap-3 w-[200px] shrink-0">
                     <img
                       src={
-                        user.uploadPhoto &&
-                        user.uploadPhoto === "http://10.10.20.16:5137undefined"
+                        worker.uploadPhoto &&
+                        worker.uploadPhoto ===
+                          "http://10.10.20.16:5137undefined"
                           ? "https://avatar.iran.liara.run/public/39"
-                          : user.uploadPhoto
+                          : worker.uploadPhoto
                       }
-                      alt={user.firstName}
+                      alt={worker.firstName}
                       className="w-9 h-9 rounded-full object-cover"
                     />
                     <span
                       className="text-[#e91e63] font-medium cursor-pointer hover:underline"
-                      onClick={() => handleViewWorker(user)}
+                      onClick={() => handleViewWorker(worker)}
                     >
-                      {user.firstName}
+                      {worker.firstName}
                     </span>
                   </td>
 
                   <td className="px-6 py-3 w-[120px]">
-                    {user?.title || "Title"}
+                    {worker?.title || "Title"}
                   </td>
-                  <td className="px-6 py-3 w-[120px]">{user.workerId}</td>
-                  <td className="px-6 py-3 w-[160px]">{user.address}</td>
+                  <td className="px-6 py-3 w-[120px]">{worker.workerId}</td>
+                  <td className="px-6 py-3 w-[160px]">{worker.address}</td>
                   <td className="px-6 py-3 w-[240px]">
-                    {user.services?.map((service) => (
+                    {worker.services?.map((service) => (
                       <ul key={service?._id}>
                         <li>{service?.service?.serviceName}</li>
                       </ul>
@@ -133,12 +150,12 @@ const WorkerTable = () => {
                   <td className="px-6 py-3 w-[120px]">
                     <span
                       className={`${
-                        user?.isBlocked
+                        worker?.isBlocked
                           ? "bg-red-200 text-red-600 text-xs px-3 py-1 rounded-full"
                           : "bg-green-100 text-green-700 text-xs px-3 py-1 rounded-full"
                       }`}
                     >
-                      {user?.isBlocked ? "Blocked" : "Active"}
+                      {worker?.isBlocked ? "Blocked" : "Active"}
                     </span>
                   </td>
 
@@ -146,8 +163,16 @@ const WorkerTable = () => {
                   <td className="px-6 py-3 text-right flex justify-center gap-4 text-[#e91e63]">
                     <EyeOutlined
                       className="cursor-pointer hover:text-pink-500 text-lg"
-                      onClick={() => handleViewWorker(user)}
+                      onClick={() => handleViewWorker(worker)}
                     />
+                    <Popconfirm
+                      title="Are you sure you want to delete this worker?"
+                      onConfirm={() => handleDeleteWorker(worker._id)} // Call delete function on confirmation
+                      okText="Yes"
+                      cancelText="No"
+                    >
+                      <DeleteOutlined className="cursor-pointer hover:text-pink-500 text-lg" />
+                    </Popconfirm>
                   </td>
                 </tr>
               ))

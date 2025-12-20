@@ -1,7 +1,28 @@
-import { LockOutlined } from "@ant-design/icons";
+import { LockOutlined, DeleteOutlined } from "@ant-design/icons";
 import { ScaleLoader } from "react-spinners";
+import { useDeleteManagerMutation } from "../../redux/features/dashboard/dashboardApi";
+import { toast } from "sonner";
+import { Popconfirm } from "antd";
 
-const ManagerList = ({ onDelete, onOpenAccess, managers, isLoading, searchValue, setSearchValue }) => {
+const ManagerList = ({
+  onDelete,
+  onOpenAccess,
+  managers,
+  isLoading,
+  searchValue,
+  setSearchValue,
+}) => {
+  const [deleteManager] = useDeleteManagerMutation();
+
+  const handleDeleteConfirm = async (managerId) => {
+    const res =await deleteManager(managerId);
+    if (res?.data.data) {
+      toast.success(res?.data?.message);
+    } else if (res?.data?.error) {
+      toast.error(res?.error?.message);
+    }
+  };
+
   return (
     <div className="bg-white rounded-xl shadow-sm border border-pink-100 p-4">
       <div className="mb-4">
@@ -23,7 +44,7 @@ const ManagerList = ({ onDelete, onOpenAccess, managers, isLoading, searchValue,
               <th className="px-6 py-3 text-left">Mail</th>
               <th className="px-6 py-3 text-left">Status</th>
               <th className="px-6 py-3 text-center">Access</th>
-              <th className="px-6 py-3 text-right">Actions</th>
+              <th className="px-6 py-3 text-center">Actions</th>
             </tr>
           </thead>
 
@@ -73,11 +94,21 @@ const ManagerList = ({ onDelete, onOpenAccess, managers, isLoading, searchValue,
                     />
                   </td>
 
-                  <td className="px-6 py-3 text-right">
+                  <td className="px-6 py-3 text-center">
+                    {/* Delete Button */}
+                    <Popconfirm
+                      title="Are you sure you want to delete this manager?"
+                      onConfirm={() => handleDeleteConfirm(manager._id)} // Trigger the delete with manager's ID
+                      okText="Yes"
+                      cancelText="No"
+                    >
+                      <DeleteOutlined className="cursor-pointer text-[#e91e63] text-md hover:text-[#c2185b]" />
+                    </Popconfirm>
+
                     {/* Block/Unblock Button */}
                     <button
                       onClick={() => onDelete(manager?._id)} // Pass the manager's ID to the onDelete function
-                      className="bg-[#e91e63] text-white px-3 py-1 text-xs rounded-md shadow hover:bg-[#d81b60] transition-all"
+                      className="bg-[#e91e63] text-white px-3 py-1 text-xs rounded-md shadow hover:bg-[#d81b60] transition-all ml-2"
                     >
                       {manager?.isBlocked ? "Unblock" : "Block"}
                     </button>

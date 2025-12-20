@@ -10,7 +10,14 @@ const messageApi = baseApi.injectEndpoints({
       }),
       providesTags: [tagTypes.helpSupport],
     }),
+    deleteContactUs: builder.mutation({
+      query: (id) => ({
+        url: `/public/delete-contact-us/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: [tagTypes.helpSupport],
+    }),
   }),
 });
 
-export const { useGetAllMessagesQuery } = messageApi;
+export const { useGetAllMessagesQuery, useDeleteContactUsMutation } = messageApi;

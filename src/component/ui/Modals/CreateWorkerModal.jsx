@@ -1,15 +1,21 @@
 import { useRef, useState } from "react";
 import { Modal, Select, Table } from "antd";
-import { UploadOutlined, DeleteOutlined } from "@ant-design/icons";
+import {
+  UploadOutlined,
+  DeleteOutlined,
+  EyeInvisibleOutlined,
+  EyeTwoTone,
+} from "@ant-design/icons";
 import { useGetAllServicesQuery } from "../../../redux/features/service/service";
 import { useCreateWorkerMutation } from "../../../redux/features/worker/worker";
+import { toast } from "sonner";
 
 const CreateWorkerModal = ({ isOpen, onClose }) => {
   const fileInputRef = useRef(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [imageFile, setImageFile] = useState(null);
   const { data } = useGetAllServicesQuery({});
-  const [createWorker] = useCreateWorkerMutation();
+  const [createWorker, { isLoading }] = useCreateWorkerMutation();
   const allServices = data?.data;
 
   // 🔹 Worker Info
@@ -30,10 +36,19 @@ const CreateWorkerModal = ({ isOpen, onClose }) => {
 
   const [selectedServices, setSelectedServices] = useState([]);
   const [selectedSubServices, setSelectedSubServices] = useState({});
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState("");
 
   // 🔹 Handle input
-  const handleChange = (e) =>
+  const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+
+    // Clear password error when user types
+    if (e.target.name === "password" || e.target.name === "confirmPassword") {
+      setPasswordError("");
+    }
+  };
 
   // 🔹 Handle image upload
   const handleImageChange = (e) => {
@@ -71,6 +86,17 @@ const CreateWorkerModal = ({ isOpen, onClose }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Password validation
+    if (formData.password !== formData.confirmPassword) {
+      setPasswordError("Passwords do not match!");
+      return;
+    }
+
+    if (formData.password.length < 6) {
+      setPasswordError("Password must be at least 6 characters long!");
+      return;
+    }
+
     // Create FormData instance
     const postData = new FormData();
 
@@ -106,8 +132,32 @@ const CreateWorkerModal = ({ isOpen, onClose }) => {
 
     console.log("👷 Worker Created - FormData prepared");
     console.log("Services:", servicesArray);
+
     const res = await createWorker(postData);
-    console.log(res);
+    if (res?.data) {
+      toast.success(res?.data?.message);
+      setFormData({
+        firstName: "",
+        lastName: "",
+        address: "",
+        city: "",
+        state: "",
+        zipCode: "",
+        title: "",
+        workerId: "",
+        phone: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+      });
+      setImagePreview(null);
+      setImageFile(null);
+      setSelectedServices([]);
+      setSelectedSubServices({});
+      setPasswordError("");
+    } else if (res?.error) {
+      toast.error(res?.error?.data?.message || "Failed to create worker");
+    }
 
     onClose();
   };
@@ -165,14 +215,23 @@ const CreateWorkerModal = ({ isOpen, onClose }) => {
             .replace(/^./, (s) => s.toUpperCase());
 
           if (key === "workerId") placeholder = "Worker ID#";
-          if (key === "zipCode") placeholder = "zip Code";
+          if (key === "zipCode") placeholder = "Zip Code";
+
+          const isPasswordField =
+            key === "password" || key === "confirmPassword";
 
           return (
-            <div key={key} className="col-span-1">
+            <div key={key} className="col-span-1 relative">
               <input
                 type={
-                  key.includes("password")
-                    ? "password"
+                  isPasswordField
+                    ? key === "password"
+                      ? showPassword
+                        ? "text"
+                        : "password"
+                      : showConfirmPassword
+                      ? "text"
+                      : "password"
                     : key === "email"
                     ? "email"
                     : "text"
@@ -181,11 +240,37 @@ const CreateWorkerModal = ({ isOpen, onClose }) => {
                 placeholder={placeholder}
                 value={formData[key]}
                 onChange={handleChange}
-                className="w-full border border-pink-100 rounded-md px-3 py-2 focus:border-[#e91e63] focus:outline-none"
+                className="w-full border border-pink-100 rounded-md px-3 py-2 pr-10 focus:border-[#e91e63] focus:outline-none"
+                required
               />
+              {isPasswordField && (
+                <span
+                  onClick={() => {
+                    if (key === "password") {
+                      setShowPassword(!showPassword);
+                    } else {
+                      setShowConfirmPassword(!showConfirmPassword);
+                    }
+                  }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-500 hover:text-[#e91e63]"
+                >
+                  {(key === "password" ? showPassword : showConfirmPassword) ? (
+                    <EyeTwoTone twoToneColor="#e91e63" />
+                  ) : (
+                    <EyeInvisibleOutlined />
+                  )}
+                </span>
+              )}
             </div>
           );
         })}
+
+        {/* Password Error Message */}
+        {passwordError && (
+          <div className="col-span-2 bg-red-50 border border-red-200 text-red-600 px-4 py-2 rounded-lg text-sm">
+            {passwordError}
+          </div>
+        )}
 
         {/* Main Services */}
         <div className="col-span-2 mt-3">
@@ -286,14 +371,31 @@ const CreateWorkerModal = ({ isOpen, onClose }) => {
         <div className="col-span-2 flex justify-center gap-4 mt-6">
           <button
             type="submit"
-            className="bg-[#e91e63] text-white px-6 py-2 rounded-md hover:bg-pink-600 transition-all"
+            disabled={isLoading}
+            className={`px-6 py-2 rounded-md transition-all flex items-center justify-center gap-2 ${
+              isLoading
+                ? "bg-gray-300 cursor-not-allowed text-gray-500"
+                : "bg-[#e91e63] text-white hover:bg-pink-600"
+            }`}
           >
-            Create Profile
+            {isLoading ? (
+              <>
+                <span className="inline-block w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></span>
+                Creating...
+              </>
+            ) : (
+              "Create Profile"
+            )}
           </button>
           <button
             type="button"
             onClick={onClose}
-            className="border border-[#e91e63] text-[#e91e63] px-6 py-2 rounded-md hover:bg-pink-50 transition-all"
+            disabled={isLoading}
+            className={`border border-[#e91e63] px-6 py-2 rounded-md transition-all ${
+              isLoading
+                ? "opacity-50 cursor-not-allowed"
+                : "text-[#e91e63] hover:bg-pink-50"
+            }`}
           >
             Cancel
           </button>

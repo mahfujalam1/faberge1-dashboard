@@ -1,7 +1,7 @@
 import React from "react";
 import CreateManager from "../../../page/CreateManager/CreateManager";
 
-const CreateManagerModal = ({ isOpen, onClose, onSubmit }) => {
+const CreateManagerModal = ({ isOpen, onClose, onSubmit, createLoading }) => {
   if (!isOpen) return null;
 
   return (
@@ -13,7 +13,7 @@ const CreateManagerModal = ({ isOpen, onClose, onSubmit }) => {
         >
           ✕
         </button>
-        <CreateManager onSubmit={onSubmit} />
+        <CreateManager onSubmit={onSubmit} createLoading={createLoading} />
       </div>
     </div>
   );

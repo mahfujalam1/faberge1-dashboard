@@ -33,6 +33,14 @@ const dashboardApi = baseApi.injectEndpoints({
       }),
       providesTags: [tagTypes.managers, tagTypes.users],
     }),
+
+    deleteManager: builder.mutation({
+      query: (id) => ({
+        url: `/manager/manager-delete/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: [tagTypes.users, tagTypes.managers],
+    }),
   }),
 });
 
@@ -41,4 +49,5 @@ export const {
   useGetIncomeRatioQuery,
   useGetUpcomingBookingsQuery,
   useGetSingleManagerQuery,
+  useDeleteManagerMutation
 } = dashboardApi;

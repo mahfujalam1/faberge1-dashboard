@@ -10,9 +10,16 @@ const userApi = baseApi.injectEndpoints({
           method: "GET",
         };
       },
-      providesTags:[tagTypes.users]
+      providesTags: [tagTypes.users],
+    }),
+    deleteUser: builder.mutation({
+      query: (id) => ({
+        url: `/customer/customer-delete/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: [tagTypes.users],
     }),
   }),
 });
 
-export const { useGetAllUsersQuery } = userApi;
+export const { useGetAllUsersQuery, useDeleteUserMutation } = userApi;

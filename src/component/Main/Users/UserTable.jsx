@@ -1,7 +1,10 @@
-import { EyeOutlined, SearchOutlined } from "@ant-design/icons";
-import { Input, Button } from "antd";
+import { EyeOutlined, SearchOutlined, DeleteOutlined } from "@ant-design/icons";
+import { Input, Button, Popconfirm } from "antd";
 import { useState } from "react";
-import { useGetAllUsersQuery } from "../../../redux/features/user/userApi";
+import {
+  useDeleteUserMutation,
+  useGetAllUsersQuery,
+} from "../../../redux/features/user/userApi";
 import UserDetailsModal from "../../ui/Modals/UserDetailsModal";
 import { ScaleLoader } from "react-spinners";
 
@@ -10,6 +13,8 @@ const UserTable = () => {
   const [currentPage, setCurrentPage] = useState(1); // Current page for pagination
   const [openModal, setOpenModal] = useState(false); // Modal state for user details
   const [detailsData, setDetailsData] = useState({}); // Store the details of selected user
+
+  const [deleteUser] = useDeleteUserMutation(); // Hook for deleting a user
 
   const limit = 8; // Define the page size (limit)
 
@@ -62,6 +67,15 @@ const UserTable = () => {
       );
     }
     return buttons;
+  };
+
+  const handleDeleteUser = async(userId) => {
+   const res = await deleteUser(userId)
+   if (res?.data.data) {
+     toast.success(res?.data?.message);
+   } else if (res?.data?.error) {
+     toast.error(res?.error?.message);
+   }
   };
 
   return (
@@ -135,6 +149,14 @@ const UserTable = () => {
                       className="cursor-pointer hover:text-pink-500 text-lg"
                       onClick={() => handleViewCustomer(user)}
                     />
+                    <Popconfirm
+                      title="Are you sure you want to delete this user?"
+                      onConfirm={() => handleDeleteUser(user._id)} // Call delete function on confirmation
+                      okText="Yes"
+                      cancelText="No"
+                    >
+                      <DeleteOutlined className="cursor-pointer hover:text-pink-500 text-lg" />
+                    </Popconfirm>
                   </td>
                 </tr>
               ))

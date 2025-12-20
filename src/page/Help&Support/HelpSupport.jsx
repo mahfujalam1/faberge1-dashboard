@@ -1,11 +1,31 @@
 import React from "react";
-import { MailOutlined, UserOutlined, MessageOutlined } from "@ant-design/icons";
-import { useGetAllMessagesQuery } from "../../redux/features/help-and-support/message";
+import {
+  MailOutlined,
+  UserOutlined,
+  MessageOutlined,
+  DeleteOutlined,
+} from "@ant-design/icons";
+import { Popconfirm } from "antd";
+import {
+  useDeleteContactUsMutation,
+  useGetAllMessagesQuery,
+} from "../../redux/features/help-and-support/message";
 import { ScaleLoader } from "react-spinners";
 
 const HelpSupport = () => {
   const { data, isLoading } = useGetAllMessagesQuery();
   const contactMessages = data?.data;
+
+  const [deleteContactUs, { isLoading: deleteLoading }] =
+    useDeleteContactUsMutation();
+
+  const handleDelete = async (id) => {
+    try {
+      await deleteContactUs(id)
+    } catch (error) {
+      console.error("Failed to delete message:", error);
+    }
+  };
 
   const formatDateTime = (dateString) => {
     const date = new Date(dateString);
@@ -32,6 +52,7 @@ const HelpSupport = () => {
               <th className="px-6 py-3 w-[180px]">Subject</th>
               <th className="px-6 py-3 w-[300px]">Message</th>
               <th className="px-6 py-3 w-[120px]">Date</th>
+              <th className="px-6 py-3 w-[100px]">Action</th>
             </tr>
           </thead>
           <tbody>
@@ -74,6 +95,27 @@ const HelpSupport = () => {
 
                   <td className="px-6 py-3 text-gray-500">
                     {formatDateTime(msg.createdAt)}
+                  </td>
+
+                  <td className="px-6 py-3">
+                    <Popconfirm
+                      title="Delete Message"
+                      description="Are you sure you want to delete this message?"
+                      onConfirm={() => handleDelete(msg._id)}
+                      okText="Yes"
+                      cancelText="No"
+                      okButtonProps={{
+                        style: { backgroundColor: "#e91e63" },
+                        loading: deleteLoading,
+                      }}
+                    >
+                      <button
+                        className="text-red-500 hover:text-red-700 transition-colors"
+                        disabled={deleteLoading}
+                      >
+                        <DeleteOutlined className="text-lg" />
+                      </button>
+                    </Popconfirm>
                   </td>
                 </tr>
               ))

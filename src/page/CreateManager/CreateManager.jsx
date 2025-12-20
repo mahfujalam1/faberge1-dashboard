@@ -4,8 +4,9 @@ import {
   EyeInvisibleOutlined,
   EyeTwoTone,
 } from "@ant-design/icons";
+import { Button } from "antd"; // Import the Button component from Ant Design
 
-const CreateManager = ({ onSubmit }) => {
+const CreateManager = ({ onSubmit, createLoading }) => {
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -85,7 +86,6 @@ const CreateManager = ({ onSubmit }) => {
 
     // Call the onSubmit prop with the FormData
     onSubmit(submitData);
-
   };
 
   return (
@@ -330,12 +330,19 @@ const CreateManager = ({ onSubmit }) => {
           />
         </div>
 
-        <button
-          type="submit"
-          className="w-full bg-[#ff3679] hover:bg-[#ff307c] text-white py-2.5 rounded-lg font-semibold mt-4 transition-all"
+        {/* Submit Button */}
+        <Button
+          type="primary"
+          htmlType="submit"
+          className="w-full py-2.5 rounded-lg font-semibold mt-4 transition-all bg-[#ff3679] hover:bg-[#ff307c] text-white"
+          loading={createLoading}
+          style={{
+            backgroundColor: "#ff3679", // your primary button color
+            borderColor: "#ff3679", // border color for the button
+          }}
         >
           Create Manager
-        </button>
+        </Button>
       </form>
     </div>
   );

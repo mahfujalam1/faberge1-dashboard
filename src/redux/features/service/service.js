@@ -48,6 +48,24 @@ const serviceApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: [tagTypes.services],
     }),
+    updateServiceTime: builder.mutation({
+      query: (data) => {
+        return {
+          url: `/service/service-time`,
+          method: "POST",
+          body: data,
+        };
+      },
+      invalidatesTags: [tagTypes.services],
+    }),
+
+    getCurrentServiceTime: builder.query({
+      query: () => ({
+        url: `/service/service-time`,
+        method: "GET",
+      }),
+      providesTags: [tagTypes.services],
+    }),
   }),
 });
 
@@ -57,4 +75,6 @@ export const {
   useGetAllServicesQuery,
   useGetServiceByIdQuery,
   useUpdateServiceMutation,
+  useUpdateServiceTimeMutation,
+  useGetCurrentServiceTimeQuery
 } = serviceApi;

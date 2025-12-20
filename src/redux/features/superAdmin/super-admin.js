@@ -33,7 +33,7 @@ const superAdmin = baseApi.injectEndpoints({
       }),
       invalidatesTags: [tagTypes.managers],
     }),
-    deleteManager: builder.mutation({
+    blockManager: builder.mutation({
       query: (managerId) => ({
         url: `/manager/block-unblock/${managerId}`,
         method: "PATCH",
@@ -48,5 +48,5 @@ export const {
   useGetAllAccessibilityQuery,
   useUpdateManagerAccessMutation,
   useCreateManagerMutation,
-  useDeleteManagerMutation,
+  useBlockManagerMutation,
 } = superAdmin;

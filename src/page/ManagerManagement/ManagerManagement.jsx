@@ -6,8 +6,9 @@ import {
   useGetAllManagersQuery,
   useCreateManagerMutation,
   useUpdateManagerAccessMutation,
-  useDeleteManagerMutation,
+  useBlockManagerMutation,
 } from "../../redux/features/superAdmin/super-admin";
+import { toast } from "sonner";
 
 const ManagerManagement = () => {
   const [selectedManager, setSelectedManager] = useState(null);
@@ -19,14 +20,20 @@ const ManagerManagement = () => {
   const managers = data?.data;
 
   // Hooks for mutation
-  const [createManager] = useCreateManagerMutation();
+  const [createManager, { isLoading: createLoading }] =
+    useCreateManagerMutation();
   const [updateManagerAccess] = useUpdateManagerAccessMutation();
-  const [deleteManager] = useDeleteManagerMutation();
+  const [blockManger] = useBlockManagerMutation();
 
   // 🗑️ Delete Manager
   const handleDeleteManager = async (managerId) => {
     try {
-      await deleteManager(managerId); // Delete manager via RTK Query API
+      const res = await blockManger(managerId);
+      if (res?.data) {
+        toast.success(res?.data?.message);
+      } else if (res?.error) {
+        toast.error(res?.error?.message);
+      }
     } catch (error) {
       console.error("Failed to delete manager", error);
     }
@@ -56,7 +63,12 @@ const ManagerManagement = () => {
   // ➕ Add new manager
   const handleAddManager = async (newManagerData) => {
     try {
-      await createManager(newManagerData); // Create manager via RTK Query API
+      const res = await createManager(newManagerData);
+      if (res?.data) {
+        toast.success(res?.data?.message);
+      } else if (res?.error) {
+        toast.error(res?.error?.message);
+      }
       setShowCreateModal(false); // Close modal after creation
     } catch (error) {
       console.error("Failed to create manager", error);
@@ -98,6 +110,7 @@ const ManagerManagement = () => {
       {/* ➕ Create Manager Modal */}
       {showCreateModal && (
         <CreateManagerModal
+          createLoading={createLoading}
           isOpen={showCreateModal}
           onClose={() => setShowCreateModal(false)}
           onSubmit={handleAddManager}

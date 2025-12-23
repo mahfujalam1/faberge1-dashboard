@@ -57,10 +57,9 @@ const ManagerList = ({
                 >
                   <td className="px-6 py-3 flex items-center gap-3">
                     <img
-                      src={
-                        manager?.uploadPhoto ||
-                        "https://avatar.iran.liara.run/public/job/police/male"
-                      }
+                      src={`${import.meta.env.VITE_REACT_APP_BASE_URL}${
+                        manager?.uploadPhoto
+                      }`}
                       alt={manager?.firstName}
                       className="w-9 h-9 rounded-full object-cover"
                     />

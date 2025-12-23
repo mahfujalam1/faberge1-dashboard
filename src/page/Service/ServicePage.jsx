@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import UpdateServiceModal from "../../component/ui/Modals/UpdateServiceModal";
 import AddServiceModal from "../../component/ui/Modals/AddServiceModal";
-import { Skeleton, Tooltip } from "antd";
+import { Skeleton, Tooltip, Popconfirm } from "antd";
 import {
   useDeleteServiceMutation,
   useGetAllServicesQuery,
@@ -125,10 +125,14 @@ const ServicePage = () => {
                         onClick={() => handleUpdate(service)}
                         className="cursor-pointer hover:text-pink-500 text-lg"
                       />
-                      <DeleteOutlined
-                        onClick={() => handleDelete(service._id)}
-                        className="cursor-pointer hover:text-red-500 text-lg"
-                      />
+                      <Popconfirm
+                        title="Are you sure you want to delete this service?"
+                        onConfirm={() => handleDelete(service._id)}
+                        okText="Yes"
+                        cancelText="No"
+                      >
+                        <DeleteOutlined className="cursor-pointer hover:text-red-500 text-lg" />
+                      </Popconfirm>
                     </td>
                   </tr>
                 ))

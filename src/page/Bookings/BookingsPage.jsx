@@ -1,8 +1,11 @@
 import { EyeOutlined, DeleteOutlined, SearchOutlined } from "@ant-design/icons";
-import { Input, Button } from "antd";
+import { Input, Button, Popconfirm } from "antd";
 import { useState } from "react";
 import BookingDetailsModal from "../../component/ui/Modals/BookingDetailsModal";
-import { useGetAllBookingsQuery } from "../../redux/features/booking/booking";
+import {
+  useDeleteBookingMutation,
+  useGetAllBookingsQuery,
+} from "../../redux/features/booking/booking";
 import { ScaleLoader } from "react-spinners";
 
 const BookingsPage = () => {
@@ -20,6 +23,9 @@ const BookingsPage = () => {
   const bookings = data?.data;
   const pagination = data?.pagination;
   console.log(bookings);
+
+  // Hook for deleting booking
+  const [deleteBooking] = useDeleteBookingMutation();
 
   const filteredBookings = bookings?.filter((b) =>
     b.customer?.firstName.toLowerCase().includes(searchValue.toLowerCase())
@@ -99,22 +105,21 @@ const BookingsPage = () => {
     return buttons;
   };
 
+  const handleDeleteBooking = async (bookingId) => {
+    const res = await deleteBooking(bookingId);
+    if (res?.data?.success) {
+      toast.success("Booking deleted successfully");
+    } else if (res?.error) {
+      toast.error("Failed to delete booking");
+    }
+  };
+
   return (
     <div className="p-6 overflow-x-auto md:w-[420px] lg:w-[680px] xl:w-full">
       <h1 className="text-xl font-semibold text-gray-800 mb-4">All Bookings</h1>
 
       <div className="bg-white rounded-xl shadow-sm border border-pink-100 mt-4">
-        {/* <div className="p-5 border-b border-pink-100">
-          <Input
-            placeholder="Search bookings..."
-            prefix={<SearchOutlined className="text-[#e91e63]" />}
-            value={searchValue}
-            onChange={(e) => setSearchValue(e.target.value)}
-            className="border border-pink-200 rounded-md py-3 focus:border-[#e91e63] focus:shadow-md"
-          />
-        </div> */}
-
-        {/* 🧾 Table */}
+        {/* Table */}
         <div className="w-full overflow-x-auto scrollbar-thin scrollbar-thumb-pink-200 scrollbar-track-pink-50">
           <table className="min-w-[900px] w-full text-sm text-left text-gray-700">
             <thead className="bg-pink-50 text-gray-700 uppercase text-xs">
@@ -138,10 +143,9 @@ const BookingsPage = () => {
                     <td className="px-6 py-3">
                       <div className="flex items-center gap-3">
                         <img
-                          src={
-                            booking?.customer?.uploadPhoto ||
-                            "https://avatar.iran.liara.run/public/19"
-                          }
+                          src={`${import.meta.env.VITE_REACT_APP_BASE_URL}${
+                            booking?.customer?.uploadPhoto
+                          }`}
                           alt={booking?.customer?.firstName}
                           className="w-10 h-10 rounded-full object-cover"
                         />
@@ -173,7 +177,7 @@ const BookingsPage = () => {
                     </td>
 
                     <td className="px-6 py-3 text-gray-600">
-                      {formatDateTime(booking.createdAt)}
+                      {formatDateTime(booking?.date)}
                     </td>
 
                     <td className="px-6 py-3">
@@ -198,6 +202,14 @@ const BookingsPage = () => {
                           className="cursor-pointer hover:text-pink-500 text-lg"
                           onClick={() => handleView(booking)}
                         />
+                        <Popconfirm
+                          title="Are you sure you want to delete this booking?"
+                          onConfirm={() => handleDeleteBooking(booking._id)}
+                          okText="Yes"
+                          cancelText="No"
+                        >
+                          <DeleteOutlined className="cursor-pointer hover:text-pink-500 text-lg" />
+                        </Popconfirm>
                       </div>
                     </td>
                   </tr>

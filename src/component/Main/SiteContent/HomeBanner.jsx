@@ -125,7 +125,9 @@ const HomeBanner = ({ onClose }) => {
       if (homeBanner.video) {
         return (
           <video
-            src={homeBanner.video}
+            src={`${import.meta.env.VITE_REACT_APP_BASE_URL}${
+              homeBanner?.video
+            }`}
             controls
             className="h-40 rounded-lg max-w-full"
           />
@@ -133,7 +135,9 @@ const HomeBanner = ({ onClose }) => {
       } else if (homeBanner.image) {
         return (
           <img
-            src={homeBanner.image}
+            src={`${import.meta.env.VITE_REACT_APP_BASE_URL}${
+              homeBanner?.image
+            }`}
             alt="Home Banner"
             className="h-40 rounded-lg object-cover max-w-full"
           />

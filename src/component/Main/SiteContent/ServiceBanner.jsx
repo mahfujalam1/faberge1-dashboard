@@ -169,7 +169,9 @@ const ServiceBanner = ({ onClose }) => {
       if (banner.video) {
         return (
           <video
-            src={banner.video}
+            src={`${import.meta.env.VITE_REACT_APP_BASE_URL}${
+              banner.video
+            }`}
             controls
             className="h-40 rounded-lg max-w-full"
           />
@@ -177,7 +179,9 @@ const ServiceBanner = ({ onClose }) => {
       } else if (banner.image) {
         return (
           <img
-            src={banner.image}
+            src={`${import.meta.env.VITE_REACT_APP_BASE_URL}${
+              banner.image
+            }`}
             alt={`${type} Banner`}
             className="h-40 rounded-lg object-cover max-w-full"
           />

@@ -86,11 +86,9 @@ const ProfileForm = () => {
         <div className="bg-white shadow-sm rounded-xl p-8 flex flex-col items-center mb-8 relative">
           <div className="relative">
             <img
-              src={
-                previewImage ||
-                profile?.uploadPhoto ||
-                "https://avatar.iran.liara.run/public/38"
-              }
+              src={`${previewImage || import.meta.env.VITE_REACT_APP_BASE_URL}${
+                profile?.uploadPhoto
+              }`}
               alt="profile"
               className="w-28 h-28 rounded-full object-cover border-4 border-pink-100"
             />

@@ -53,12 +53,9 @@ const UserDetailsModal = ({ isOpen, user, type, onClose }) => {
         {/* Profile Image + Name */}
         <div className="flex flex-col items-center mb-5">
           <img
-            src={
-              user.uploadPhoto &&
-              user.uploadPhoto === "http://10.10.20.16:5137undefined"
-                ? "https://avatar.iran.liara.run/public/39"
-                : user.uploadPhoto
-            }
+            src={`${import.meta.env.VITE_REACT_APP_BASE_URL}${
+              user?.uploadPhoto
+            }`}
             alt={user?.firstName}
             className="w-24 h-24 rounded-full object-cover border-4 border-pink-100 shadow-sm mb-3"
           />
@@ -86,6 +83,10 @@ const UserDetailsModal = ({ isOpen, user, type, onClose }) => {
             <span className="font-medium text-gray-600">State:</span>
             <span>{user?.state || "New York"}</span>
           </div>
+          <div className="flex justify-between">
+            <span className="font-medium text-gray-600">zipCode:</span>
+            <span>{user?.zipCode || "New York"}</span>
+          </div>
 
           {user?.role === "customer" && (
             <>
@@ -106,10 +107,6 @@ const UserDetailsModal = ({ isOpen, user, type, onClose }) => {
 
           {user?.role === "worker" && (
             <>
-              <div className="flex justify-between">
-                <span className="font-medium text-gray-600">ZipCode: </span>
-                <span>{user?.zipCode}</span>
-              </div>
               <div className="flex justify-between">
                 <span className="font-medium text-gray-600">Email:</span>
                 <span>{user?.email}</span>

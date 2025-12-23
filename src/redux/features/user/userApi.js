@@ -19,7 +19,16 @@ const userApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: [tagTypes.users],
     }),
+
+    updateCustomer: builder.mutation({
+      query: ({ id, data }) => ({
+        url: `/customer/update-profile/${id}`,
+        method: "PATCH",
+        body: data,
+      }),
+      invalidatesTags: [tagTypes.users],
+    }),
   }),
 });
 
-export const { useGetAllUsersQuery, useDeleteUserMutation } = userApi;
+export const { useGetAllUsersQuery, useDeleteUserMutation, useUpdateCustomerMutation } = userApi;

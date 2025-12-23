@@ -1,4 +1,9 @@
-import { EyeOutlined, SearchOutlined, DeleteOutlined } from "@ant-design/icons";
+import {
+  EyeOutlined,
+  SearchOutlined,
+  DeleteOutlined,
+  EditOutlined,
+} from "@ant-design/icons";
 import { Input, Button, Popconfirm } from "antd";
 import { useState } from "react";
 import {
@@ -6,13 +11,17 @@ import {
   useGetAllUsersQuery,
 } from "../../../redux/features/user/userApi";
 import UserDetailsModal from "../../ui/Modals/UserDetailsModal";
+import UpdateCustomerModal from "../../ui/Modals/UpdateCustomerModal";
 import { ScaleLoader } from "react-spinners";
+import { toast } from "sonner";
 
 const UserTable = () => {
   const [searchValue, setSearchValue] = useState(""); // Search term for filtering
   const [currentPage, setCurrentPage] = useState(1); // Current page for pagination
   const [openModal, setOpenModal] = useState(false); // Modal state for user details
+  const [openUpdateModal, setOpenUpdateModal] = useState(false); // Modal state for update
   const [detailsData, setDetailsData] = useState({}); // Store the details of selected user
+  const [updateData, setUpdateData] = useState({}); // Store the data for updating user
 
   const [deleteUser] = useDeleteUserMutation(); // Hook for deleting a user
 
@@ -34,6 +43,11 @@ const UserTable = () => {
   const handleViewCustomer = (data) => {
     setOpenModal(true);
     setDetailsData(data);
+  };
+
+  const handleEditCustomer = (data) => {
+    setOpenUpdateModal(true);
+    setUpdateData(data);
   };
 
   // Pagination logic
@@ -69,13 +83,13 @@ const UserTable = () => {
     return buttons;
   };
 
-  const handleDeleteUser = async(userId) => {
-   const res = await deleteUser(userId)
-   if (res?.data.data) {
-     toast.success(res?.data?.message);
-   } else if (res?.data?.error) {
-     toast.error(res?.error?.message);
-   }
+  const handleDeleteUser = async (userId) => {
+    const res = await deleteUser(userId);
+    if (res?.data.data) {
+      toast.success(res?.data?.message);
+    } else if (res?.data?.error) {
+      toast.error(res?.error?.message);
+    }
   };
 
   return (
@@ -99,7 +113,7 @@ const UserTable = () => {
               <th className="px-6 py-3 w-[240px]">Email</th>
               <th className="px-6 py-3 w-[160px]">Phone</th>
               <th className="px-6 py-3 w-[160px]">Status</th>
-              <th className="px-6 py-3 text-center w-[100px]">Actions</th>
+              <th className="px-6 py-3 text-center w-[140px]">Actions</th>
             </tr>
           </thead>
 
@@ -113,10 +127,9 @@ const UserTable = () => {
                   {/* Avatar + Name */}
                   <td className="px-6 py-3 flex items-center gap-3 w-[200px] shrink-0">
                     <img
-                      src={
-                        user.uploadPhoto ||
-                        "https://avatar.iran.liara.run/public/19"
-                      }
+                      src={`${import.meta.env.VITE_REACT_APP_BASE_URL}${
+                        user?.uploadPhoto
+                      }`}
                       alt={user.firstName}
                       className="w-9 h-9 rounded-full object-cover"
                     />
@@ -144,10 +157,14 @@ const UserTable = () => {
                   </td>
 
                   {/* Actions */}
-                  <td className="px-6 py-3 text-right flex justify-center gap-4 text-[#e91e63]">
+                  <td className="px-6 py-3 text-right flex justify-center gap-3 text-[#e91e63]">
                     <EyeOutlined
                       className="cursor-pointer hover:text-pink-500 text-lg"
                       onClick={() => handleViewCustomer(user)}
+                    />
+                    <EditOutlined
+                      className="cursor-pointer hover:text-pink-500 text-lg"
+                      onClick={() => handleEditCustomer(user)}
                     />
                     <Popconfirm
                       title="Are you sure you want to delete this user?"
@@ -207,6 +224,13 @@ const UserTable = () => {
         isOpen={openModal}
         onClose={() => setOpenModal(false)}
         user={detailsData}
+      />
+
+      {/* Update Modal */}
+      <UpdateCustomerModal
+        isOpen={openUpdateModal}
+        onClose={() => setOpenUpdateModal(false)}
+        userData={updateData}
       />
     </div>
   );

@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { EyeOutlined, DeleteOutlined } from "@ant-design/icons";
-import ConfirmationModal from "../../ui/Modals/ConfirmationModal";
-import UserDetailsModal from "../../ui/Modals/UserDetailsModal"; // ✅ import modal
 import { useGetUpcomingBookingsQuery } from "../../../redux/features/dashboard/dashboardApi";
 import BookingDetailsModal from "../../ui/Modals/BookingDetailsModal";
 import { ScaleLoader } from "react-spinners";
@@ -78,10 +76,9 @@ const UpcomingBooking = () => {
                   <td className="px-6 py-3">
                     <div className="flex items-center gap-3">
                       <img
-                        src={
-                          booking?.customer?.uploadPhoto ||
-                          "https://avatar.iran.liara.run/public/19"
-                        }
+                        src={`${import.meta.env.VITE_REACT_APP_BASE_URL}${
+                          booking?.customer?.uploadPhoto
+                        }`}
                         alt={booking?.customer?.firstName}
                         className="w-10 h-10 rounded-full object-cover"
                       />

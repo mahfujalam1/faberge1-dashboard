@@ -14,7 +14,7 @@ const TermsConditions = () => {
           <Link to="/legalities">
             <IoChevronBack className="text-2xl" />
           </Link>
-          <h1 className="text-2xl font-semibold">Term & Condition</h1>
+          <h1 className="text-2xl font-semibold">Terms & Condition</h1>
         </div>
         <Link to={"/legalities/edit-terms-conditions/11"}>
           <CustomButton border>

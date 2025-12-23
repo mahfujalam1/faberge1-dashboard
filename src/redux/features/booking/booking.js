@@ -26,6 +26,21 @@ const bookingApi = baseApi.injectEndpoints({
       }),
       providesTags: [tagTypes.bookings],
     }),
+
+    deleteBooking: builder.mutation({
+      query: (id) => ({
+        url: `/booking/delete-booking/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: [tagTypes.bookings],
+    }),
+    deleteTransaction: builder.mutation({
+      query: (id) => ({
+        url: `/booking/delete-transaction/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: [tagTypes.bookings],
+    }),
   }),
 });
 
@@ -33,4 +48,6 @@ export const {
   useGetAllBookingsQuery,
   useGetAllTransactionsQuery,
   useGetBookingsTrendsQuery,
+  useDeleteBookingMutation,
+  useDeleteTransactionMutation,
 } = bookingApi;

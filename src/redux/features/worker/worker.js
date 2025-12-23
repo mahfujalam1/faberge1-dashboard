@@ -49,6 +49,15 @@ const workerApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: [tagTypes.users, tagTypes.workers],
     }),
+
+    updateWorker: builder.mutation({
+      query: ({id, data}) => ({
+        url: `/worker/update-worker/${id}`,
+        method: "PATCH",
+        body: data
+      }),
+      invalidatesTags: [tagTypes.users, tagTypes.workers],
+    }),
   }),
 });
 
@@ -58,5 +67,6 @@ export const {
   useCreateWorkerMutation,
   useGetWorkerPopularityQuery,
   useGetServicePopularityQuery,
-  useDeleteWorkerMutation
+  useDeleteWorkerMutation,
+  useUpdateWorkerMutation
 } = workerApi;

@@ -1,4 +1,9 @@
-import { EyeOutlined, DeleteOutlined, SearchOutlined } from "@ant-design/icons";
+import {
+  EyeOutlined,
+  DeleteOutlined,
+  SearchOutlined,
+  EditOutlined,
+} from "@ant-design/icons";
 import { Input, Button, Popconfirm } from "antd";
 import { useState } from "react";
 import {
@@ -8,12 +13,15 @@ import {
 import UserDetailsModal from "../../ui/Modals/UserDetailsModal";
 import { ScaleLoader } from "react-spinners";
 import { toast } from "sonner";
+import UpdateWorkerModal from "../../ui/Modals/UpdateWorkerModal";
 
 const WorkerTable = () => {
   const [searchValue, setSearchValue] = useState(""); // Search term for filtering
   const [currentPage, setCurrentPage] = useState(1); // Page number for pagination
   const [openModal, setOpenModal] = useState(false); // Modal state for details
+  const [openUpdateModal, setOpenUpdateModal] = useState(false); // Modal state for update
   const [detailsData, setDetailsData] = useState({}); // Store the details of selected worker
+  const [updateData, setUpdateData] = useState({}); // Store the data for updating worker
 
   const [deleteWorker] = useDeleteWorkerMutation(); // Mutation hook for deleting a worker
 
@@ -37,6 +45,11 @@ const WorkerTable = () => {
   const handleViewWorker = (data) => {
     setOpenModal(true);
     setDetailsData(data);
+  };
+
+  const handleEditWorker = (data) => {
+    setOpenUpdateModal(true);
+    setUpdateData(data);
   };
 
   // Pagination logic
@@ -72,12 +85,12 @@ const WorkerTable = () => {
     return buttons;
   };
 
-  const handleDeleteWorker =async (workerId) => {
+  const handleDeleteWorker = async (workerId) => {
     const res = await deleteWorker(workerId); // Trigger the API call to delete the worker
-    if(res?.data.data){
-      toast.success(res?.data?.message)
-    }else if(res?.data?.error){
-      toast.error(res?.error?.message)
+    if (res?.data.data) {
+      toast.success(res?.data?.message);
+    } else if (res?.data?.error) {
+      toast.error(res?.error?.message);
     }
   };
 
@@ -103,7 +116,7 @@ const WorkerTable = () => {
               <th className="px-6 py-3 w-[160px]">Location</th>
               <th className="px-6 py-3 w-[240px]">Services</th>
               <th className="px-6 py-3 w-[120px]">Status</th>
-              <th className="px-6 py-3 text-center w-[100px]">Actions</th>
+              <th className="px-6 py-3 text-center w-[140px]">Actions</th>
             </tr>
           </thead>
 
@@ -117,13 +130,7 @@ const WorkerTable = () => {
                   {/* Avatar + Name */}
                   <td className="px-6 py-3 flex items-center gap-3 w-[200px] shrink-0">
                     <img
-                      src={
-                        worker?.uploadPhoto &&
-                        worker?.uploadPhoto ===
-                          "http://10.10.20.16:5137undefined"
-                          ? "https://avatar.iran.liara.run/public/39"
-                          : worker?.uploadPhoto
-                      }
+                      src={`${import.meta.env.VITE_REACT_APP_BASE_URL}${worker?.uploadPhoto}`}
                       alt={worker?.firstName}
                       className="w-9 h-9 rounded-full object-cover"
                     />
@@ -160,10 +167,14 @@ const WorkerTable = () => {
                   </td>
 
                   {/* Actions */}
-                  <td className="px-6 py-3 text-right flex justify-center gap-4 text-[#e91e63]">
+                  <td className="px-6 py-3 text-right flex justify-center gap-3 text-[#e91e63]">
                     <EyeOutlined
                       className="cursor-pointer hover:text-pink-500 text-lg"
                       onClick={() => handleViewWorker(worker)}
+                    />
+                    <EditOutlined
+                      className="cursor-pointer hover:text-pink-500 text-lg"
+                      onClick={() => handleEditWorker(worker)}
                     />
                     <Popconfirm
                       title="Are you sure you want to delete this worker?"
@@ -179,7 +190,7 @@ const WorkerTable = () => {
             ) : (
               <tr>
                 <td
-                  colSpan="6"
+                  colSpan="7"
                   className="text-center py-6 text-gray-500 text-sm"
                 >
                   {isLoading ? (
@@ -223,6 +234,13 @@ const WorkerTable = () => {
         isOpen={openModal}
         onClose={() => setOpenModal(false)}
         user={detailsData}
+      />
+
+      {/* Update Modal */}
+      <UpdateWorkerModal
+        isOpen={openUpdateModal}
+        onClose={() => setOpenUpdateModal(false)}
+        workerData={updateData}
       />
     </div>
   );

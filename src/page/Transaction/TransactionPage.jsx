@@ -1,10 +1,26 @@
 import { ScaleLoader } from "react-spinners";
-import { useGetAllTransactionsQuery } from "../../redux/features/booking/booking";
+import {
+  useDeleteTransactionMutation,
+  useGetAllTransactionsQuery,
+} from "../../redux/features/booking/booking";
+import { Popconfirm } from "antd";
+import { DeleteOutlined } from "@ant-design/icons";
 
 const TransactionsPage = () => {
   const { data, isLoading } = useGetAllTransactionsQuery();
   const mockTransactions = data?.transactions;
   console.log(mockTransactions);
+
+  const [deleteTransaction] = useDeleteTransactionMutation(); // Mutation for deleting transaction
+
+  const handleDeleteTransaction = async (transactionId) => {
+    const res = await deleteTransaction(transactionId);
+    if (res?.data?.success) {
+      toast.success(res?.data?.message);
+    } else if (res?.error) {
+      toast.error(res?.error?.message);
+    }
+  };
 
   const formatDateTime = (dateString) => {
     const date = new Date(dateString);
@@ -34,6 +50,8 @@ const TransactionsPage = () => {
               <th className="px-6 py-3">Payment Method</th>
               <th className="px-6 py-3">Amount</th>
               <th className="px-6 py-3">Transaction ID</th>
+              <th className="px-6 py-3">Actions</th>{" "}
+              {/* Added actions column */}
             </tr>
           </thead>
 
@@ -47,13 +65,9 @@ const TransactionsPage = () => {
                   {/* User Name */}
                   <td className="px-6 py-3 flex items-center gap-3">
                     <img
-                      src={
-                        item?.worker?.uploadPhoto &&
-                        item?.worker?.uploadPhoto ===
-                          "http://10.10.20.16:5137undefined"
-                          ? "https://avatar.iran.liara.run/public/39"
-                          : item?.worker?.uploadPhoto
-                      }
+                      src={`${import.meta.env.VITE_REACT_APP_BASE_URL}${
+                        item?.worker?.uploadPhoto
+                      }`}
                       alt={item?.worker?.firstName}
                       className="w-9 h-9 rounded-full object-cover"
                     />
@@ -90,12 +104,24 @@ const TransactionsPage = () => {
                   <td className="px-6 py-3 text-gray-600 font-mono">
                     {item?.transactionId}
                   </td>
+
+                  {/* Actions */}
+                  <td className="px-6 py-3 text-right flex justify-center gap-4 text-[#e91e63]">
+                    <Popconfirm
+                      title="Are you sure you want to delete this transaction?"
+                      onConfirm={() => handleDeleteTransaction(item._id)} // Call delete function on confirmation
+                      okText="Yes"
+                      cancelText="No"
+                    >
+                      <DeleteOutlined className="cursor-pointer hover:text-pink-500 text-lg" />
+                    </Popconfirm>
+                  </td>
                 </tr>
               ))
             ) : (
               <tr>
                 <td
-                  colSpan="6"
+                  colSpan="7"
                   className="text-center py-6 text-gray-500 text-sm"
                 >
                   {isLoading ? (

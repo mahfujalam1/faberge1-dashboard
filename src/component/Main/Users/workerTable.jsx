@@ -118,30 +118,30 @@ const WorkerTable = () => {
                   <td className="px-6 py-3 flex items-center gap-3 w-[200px] shrink-0">
                     <img
                       src={
-                        worker.uploadPhoto &&
-                        worker.uploadPhoto ===
+                        worker?.uploadPhoto &&
+                        worker?.uploadPhoto ===
                           "http://10.10.20.16:5137undefined"
                           ? "https://avatar.iran.liara.run/public/39"
-                          : worker.uploadPhoto
+                          : worker?.uploadPhoto
                       }
-                      alt={worker.firstName}
+                      alt={worker?.firstName}
                       className="w-9 h-9 rounded-full object-cover"
                     />
                     <span
                       className="text-[#e91e63] font-medium cursor-pointer hover:underline"
                       onClick={() => handleViewWorker(worker)}
                     >
-                      {worker.firstName}
+                      {worker?.firstName + " " + worker?.lastName}
                     </span>
                   </td>
 
                   <td className="px-6 py-3 w-[120px]">
                     {worker?.title || "Title"}
                   </td>
-                  <td className="px-6 py-3 w-[120px]">{worker.workerId}</td>
-                  <td className="px-6 py-3 w-[160px]">{worker.address}</td>
+                  <td className="px-6 py-3 w-[120px]">{worker?.workerId}</td>
+                  <td className="px-6 py-3 w-[160px]">{worker?.address}</td>
                   <td className="px-6 py-3 w-[240px]">
-                    {worker.services?.map((service) => (
+                    {worker?.services?.map((service) => (
                       <ul key={service?._id}>
                         <li>{service?.service?.serviceName}</li>
                       </ul>

@@ -36,6 +36,7 @@ const BookingsPage = () => {
     const formattedTime = date.toLocaleTimeString("en-US", {
       hour: "2-digit",
       minute: "2-digit",
+      hour12: true,
     });
     return `${formattedDate}, ${formattedTime}`;
   };
@@ -182,10 +183,12 @@ const BookingsPage = () => {
                             ? "bg-green-100 text-green-700"
                             : booking.status === "pending"
                             ? "bg-yellow-100 text-yellow-700"
-                            : "bg-red-100 text-red-700"
+                            : "bg-green-100 text-green-700"
                         }`}
                       >
-                        {booking.status}
+                        {booking.status === "expired"
+                          ? "pending"
+                          : booking?.status}
                       </span>
                     </td>
 

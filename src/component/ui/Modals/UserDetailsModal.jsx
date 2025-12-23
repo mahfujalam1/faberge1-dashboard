@@ -5,7 +5,7 @@ import { useState } from "react";
 
 const UserDetailsModal = ({ isOpen, user, type, onClose }) => {
   if (!isOpen) return null;
-  console.log(user)
+  console.log(user);
 
   const [toggleBlock] = useToggleBlockUnblockMutation();
   const [isLoading, setIsLoading] = useState(false); // Loading state
@@ -48,10 +48,6 @@ const UserDetailsModal = ({ isOpen, user, type, onClose }) => {
           <h2 className="text-2xl font-semibold text-gray-800">
             {user?.role === "worker" ? "Worker Details" : "Customer Details"}
           </h2>
-          <p className="text-sm text-gray-500 mt-1">
-            See all details about{" "}
-            <span className="font-medium">{user?.name}</span>
-          </p>
         </div>
 
         {/* Profile Image + Name */}
@@ -74,6 +70,10 @@ const UserDetailsModal = ({ isOpen, user, type, onClose }) => {
 
         {/* Details Section */}
         <div className="grid grid-cols-1 gap-3 text-sm text-gray-700 mb-6">
+          <div className="flex justify-between">
+            <span className="font-medium text-gray-600">Name</span>
+            <span>{user?.firstName + " " + user?.lastName || "example"}</span>
+          </div>
           <div className="flex justify-between">
             <span className="font-medium text-gray-600">Address:</span>
             <span>{user?.address || "New York"}</span>
@@ -99,7 +99,7 @@ const UserDetailsModal = ({ isOpen, user, type, onClose }) => {
               </div>
               <div className="flex justify-between">
                 <span className="font-medium text-gray-600">User Type</span>
-                <span>Customer</span>
+                <span>{user?.role}</span>
               </div>
             </>
           )}
@@ -109,6 +109,10 @@ const UserDetailsModal = ({ isOpen, user, type, onClose }) => {
               <div className="flex justify-between">
                 <span className="font-medium text-gray-600">ZipCode: </span>
                 <span>{user?.zipCode}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-medium text-gray-600">Email:</span>
+                <span>{user?.email}</span>
               </div>
               <div className="flex justify-between">
                 <span className="font-medium text-gray-600">

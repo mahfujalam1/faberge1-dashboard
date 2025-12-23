@@ -102,15 +102,15 @@ const BookingDetailsModal = ({ isOpen, booking, onClose }) => {
           <div className="flex justify-between mt-2">
             <span className="font-semibold">Status</span>
             <span
-              className={`font-semibold ${
-                booking.status === "Completed"
-                  ? "text-green-600"
-                  : booking.status === "Pending"
-                  ? "text-yellow-600"
-                  : "text-[#e91e63]"
+              className={`text-xs px-3 py-1 rounded-full font-medium ${
+                booking.status === "completed"
+                  ? "bg-green-100 text-green-700"
+                  : booking.status === "pending"
+                  ? "bg-yellow-100 text-yellow-700"
+                  : "bg-green-100 text-green-700"
               }`}
             >
-              {booking.status}
+              {booking.status === "expired" ? "pending" : booking?.status}
             </span>
           </div>
         </div>

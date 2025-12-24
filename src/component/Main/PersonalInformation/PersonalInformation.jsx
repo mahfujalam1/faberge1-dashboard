@@ -14,14 +14,19 @@ const ProfileForm = () => {
   const [activeTab, setActiveTab] = useState("edit");
   const { data: profile, refetch } = useGetMyProfileQuery();
   const [updateProfile, { isLoading }] = useUpdateUserMutation();
-  const [file, setFile] = useState(null); // Store the file here
-  const [previewImage, setPreviewImage] = useState(""); // Preview the image
+  const [file, setFile] = useState(null);
+  const [previewImage, setPreviewImage] = useState(""); // This will be a blob URL
   const fileInputRef = useRef(null);
+  console.log(profile)
 
   // Set profile image preview when profile data loads
   useEffect(() => {
     if (profile?.uploadPhoto) {
-      setPreviewImage(profile.uploadPhoto);
+      console.log(profile.uploadPhoto)
+      // Set the server image URL when profile loads
+      setPreviewImage(
+        `${import.meta.env.VITE_REACT_APP_BASE_URL}${profile.uploadPhoto}`
+      );
     }
   }, [profile]);
 
@@ -30,21 +35,20 @@ const ProfileForm = () => {
     try {
       const data = new FormData();
 
-      // Append user details
       data.append("firstName", formData.firstName);
       data.append("lastName", formData.lastName);
       data.append("phone", formData.phone);
 
-      // Append photo only if it's set (binary data)
       if (file) {
-        data.append("managerProfileImage", file); // Append the actual file as binary data
+        data.append("managerProfileImage", file);
       }
 
       const res = await updateProfile(data);
 
       if (res?.data) {
         toast.success(res?.data?.message || "Profile updated successfully!");
-        refetch(); // Refresh the profile data
+        setFile(null); // Clear the file after successful upload
+        refetch();
       } else {
         console.log(res?.error?.data?.message || "Failed to update profile");
       }
@@ -53,18 +57,16 @@ const ProfileForm = () => {
     }
   };
 
-  // Trigger file input click
   const handleIconClick = () => {
     fileInputRef.current.click();
   };
 
-  // Handle file selection and preview
   const handleFileChange = (event) => {
     const selectedFile = event.target.files[0];
     if (selectedFile) {
-      setFile(selectedFile); // Store the selected file in state
+      setFile(selectedFile);
 
-      // Preview the selected image
+      // Create blob URL for preview
       const imageUrl = URL.createObjectURL(selectedFile);
       setPreviewImage(imageUrl);
     }
@@ -86,9 +88,7 @@ const ProfileForm = () => {
         <div className="bg-white shadow-sm rounded-xl p-8 flex flex-col items-center mb-8 relative">
           <div className="relative">
             <img
-              src={`${previewImage || import.meta.env.VITE_REACT_APP_BASE_URL}${
-                profile?.uploadPhoto
-              }`}
+              src={previewImage || "/default-avatar.png"} // Just use previewImage directly
               alt="profile"
               className="w-28 h-28 rounded-full object-cover border-4 border-pink-100"
             />

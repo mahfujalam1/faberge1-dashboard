@@ -7,13 +7,13 @@ import {
   useGetAllBookingsQuery,
 } from "../../redux/features/booking/booking";
 import { ScaleLoader } from "react-spinners";
+import { toast } from "sonner";
 
 const BookingsPage = () => {
-  const [currentPage, setCurrentPage] = useState(1); // State to hold the current page
+  const [currentPage, setCurrentPage] = useState(1);
   const [searchValue, setSearchValue] = useState("");
   const [selectedBooking, setSelectedBooking] = useState(null);
 
-  // Fetch data based on current page and search value
   const limit = 10;
   const { data, isLoading } = useGetAllBookingsQuery({
     page: currentPage,
@@ -22,28 +22,32 @@ const BookingsPage = () => {
   });
   const bookings = data?.data;
   const pagination = data?.pagination;
-  console.log(bookings);
 
-  // Hook for deleting booking
   const [deleteBooking] = useDeleteBookingMutation();
 
   const filteredBookings = bookings?.filter((b) =>
     b.customer?.firstName.toLowerCase().includes(searchValue.toLowerCase())
   );
 
-  // Format date and time
-  const formatDateTime = (dateString) => {
+  // Format date and convert 24-hour time to 12-hour format
+  const formatDateTime = (dateString, startTime) => {
     const date = new Date(dateString);
     const formattedDate = date.toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
     });
-    const formattedTime = date.toLocaleTimeString("en-US", {
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
-    });
+
+    // Convert startTime (e.g., "14:00") to 12-hour format
+    let formattedTime = "N/A";
+    if (startTime) {
+      const [hours, minutes] = startTime.split(":");
+      const hour = parseInt(hours, 10);
+      const period = hour >= 12 ? "PM" : "AM";
+      const hour12 = hour % 12 || 12; // Convert 0 to 12 for midnight
+      formattedTime = `${hour12}:${minutes} ${period}`;
+    }
+
     return `${formattedDate}, ${formattedTime}`;
   };
 
@@ -72,7 +76,6 @@ const BookingsPage = () => {
     setCurrentPage(page);
   };
 
-  // Pagination logic
   const handlePreviousPage = () => {
     if (currentPage > 1) {
       setCurrentPage(currentPage - 1);
@@ -119,7 +122,6 @@ const BookingsPage = () => {
       <h1 className="text-xl font-semibold text-gray-800 mb-4">All Bookings</h1>
 
       <div className="bg-white rounded-xl shadow-sm border border-pink-100 mt-4">
-        {/* Table */}
         <div className="w-full overflow-x-auto scrollbar-thin scrollbar-thumb-pink-200 scrollbar-track-pink-50">
           <table className="min-w-[900px] w-full text-sm text-left text-gray-700">
             <thead className="bg-pink-50 text-gray-700 uppercase text-xs">
@@ -177,7 +179,7 @@ const BookingsPage = () => {
                     </td>
 
                     <td className="px-6 py-3 text-gray-600">
-                      {formatDateTime(booking?.date)}
+                      {formatDateTime(booking?.date, booking?.startTime)}
                     </td>
 
                     <td className="px-6 py-3">
@@ -243,7 +245,6 @@ const BookingsPage = () => {
             Previous
           </Button>
 
-          {/* Dynamic page number buttons */}
           <div className="flex space-x-2">{renderPageButtons()}</div>
 
           <Button

@@ -1,23 +1,29 @@
 import React, { useState } from "react";
-import { useGetAllBookingsQuery } from "../../../redux/features/booking/booking";
-import { Button } from "antd";
+import { Button, Popconfirm } from "antd";
+import { DeleteOutlined } from "@ant-design/icons";
 import { ScaleLoader } from "react-spinners";
+import { toast } from "sonner";
+import {
+  useDeleteNotificationMutation,
+  useGetAllNotificationsQuery,
+} from "../../../redux/features/booking/booking";
 
 const Notifications = () => {
   const [currentPage, setCurrentPage] = useState(1); // State to hold the current page
   const [searchValue, setSearchValue] = useState("");
   const [selectedBooking, setSelectedBooking] = useState(null);
 
+  const [deleteNotification] = useDeleteNotificationMutation();
+
   // Fetch data based on current page and search value
   const limit = 10;
-  const { data, isLoading } = useGetAllBookingsQuery({
+  const { data, isLoading } = useGetAllNotificationsQuery({
     page: currentPage,
     limit,
     status: "",
   });
-  const bookings = data?.data;
+  const bookings = data?.notification;
   const pagination = data?.pagination;
-  console.log(bookings);
 
   const filteredBookings = bookings?.filter((b) =>
     b.customer?.firstName.toLowerCase().includes(searchValue.toLowerCase())
@@ -46,7 +52,7 @@ const Notifications = () => {
       .map((serviceItem) => {
         const mainService =
           serviceItem.service?.serviceName || "Unknown Service";
-        const subServices = serviceItem.subcategories
+        const subServices = serviceItem.service?.subcategory
           ?.map((sub) => sub.subcategoryName)
           .join(", ");
 
@@ -96,6 +102,16 @@ const Notifications = () => {
     return buttons;
   };
 
+  // Handle delete notification
+  const handleDeleteNotification = async (notificationId) => {
+    const res = await deleteNotification(notificationId);
+    if (res?.data) {
+      toast.success(res?.data?.message || "Notification deleted successfully");
+    } else if (res?.error) {
+      toast.error(res?.error?.data?.message || "Failed to delete notification");
+    }
+  };
+
   return (
     <div className="min-h-screen p-6 overflow-x-auto md:w-[420px] lg:w-[680px] xl:w-full">
       {/* Page Title */}
@@ -113,12 +129,13 @@ const Notifications = () => {
               <th className="px-6 py-3 text-left">Services</th>
               <th className="px-6 py-3 text-left">Payment Amount</th>
               <th className="px-6 py-3 text-left">TransactionId</th>
-              <th className="px-6 py-3 text-right">Date</th>
+              <th className="px-6 py-3 text-left">Date</th>
+              <th className="px-6 py-3 text-center">Actions</th>
             </tr>
           </thead>
 
           <tbody>
-            {filteredBookings?.length > 0 &&
+            {filteredBookings?.length > 0 ? (
               filteredBookings?.map((booking) => (
                 <tr
                   key={booking?._id}
@@ -139,18 +156,44 @@ const Notifications = () => {
                   </td>
                   <td className="px-6 py-3">${booking?.paymentAmount}</td>
                   <td className="px-6 py-3">{booking?.transactionId}</td>
-                  <td className="px-6 py-3 text-right">
+                  <td className="px-6 py-3">
                     {formatDateTime(booking?.createdAt)}
                   </td>
+                  <td className="px-6 py-3 text-center">
+                    <Popconfirm
+                      title="Delete Notification"
+                      description="Are you sure you want to delete this notification?"
+                      onConfirm={() => handleDeleteNotification(booking._id)}
+                      okText="Yes"
+                      cancelText="No"
+                      okButtonProps={{
+                        className: "bg-pink-500 hover:bg-pink-600",
+                      }}
+                    >
+                      <DeleteOutlined className="cursor-pointer hover:text-pink-500 text-lg text-[#e91e63]" />
+                    </Popconfirm>
+                  </td>
                 </tr>
-              ))}
+              ))
+            ) : (
+              <tr>
+                <td
+                  colSpan="7"
+                  className="text-center py-6 text-gray-500 text-sm"
+                >
+                  {isLoading ? (
+                    <div className="flex items-center justify-center text-center">
+                      <ScaleLoader color="#ff0db4" />
+                    </div>
+                  ) : (
+                    "No notifications found"
+                  )}
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
-        {isLoading && (
-          <div className="flex items-center justify-center text-center py-5">
-            <ScaleLoader color="#ff0db4" />
-          </div>
-        )}
+
         {/* Pagination */}
         <div className="flex justify-center items-center space-x-4 py-4">
           <Button

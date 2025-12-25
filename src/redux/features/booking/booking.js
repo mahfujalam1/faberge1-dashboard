@@ -19,6 +19,15 @@ const bookingApi = baseApi.injectEndpoints({
       providesTags: [tagTypes.bookings],
     }),
 
+
+    getAllNotifications: builder.query({
+      query: () => ({
+        url: `/booking/get-all-notifications`,
+        method: "GET",
+      }),
+      providesTags: [tagTypes.bookings],
+    }),
+
     getBookingsTrends: builder.query({
       query: (year) => ({
         url: `/booking/booking-trends?year=${year}`,
@@ -41,6 +50,13 @@ const bookingApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: [tagTypes.bookings],
     }),
+    deleteNotification: builder.mutation({
+      query: (id) => ({
+        url: `/booking/delete-notification/${id}`,
+        method: "DELETE",
+      }),
+      invalidatesTags: [tagTypes.bookings],
+    }),
   }),
 });
 
@@ -50,4 +66,7 @@ export const {
   useGetBookingsTrendsQuery,
   useDeleteBookingMutation,
   useDeleteTransactionMutation,
+  useGetAllNotificationsQuery,
+  useDeleteNotificationMutation
+
 } = bookingApi;

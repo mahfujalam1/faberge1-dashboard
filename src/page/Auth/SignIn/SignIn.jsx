@@ -6,8 +6,9 @@ import { toast } from "sonner";
 
 const SignIn = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
-  const [login, {isLoading}] = useLoginMutation();
+  const [login, { isLoading }] = useLoginMutation();
   const [remember, setRemember] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigation = useNavigate();
 
   const handleChange = (e) => {
@@ -17,14 +18,14 @@ const SignIn = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     const res = await login(formData);
-    console.log(res)
+    console.log(res);
     if (res?.data) {
       toast.success(res?.data?.message);
       localStorage.setItem("token", res?.data?.token);
-    }else if(res?.error){
+      navigation("/");
+    } else if (res?.error) {
       toast.error(res?.error?.data?.message || "Login failed");
     }
-    navigation('/')
   };
 
   return (
@@ -64,7 +65,7 @@ const SignIn = () => {
             </label>
             <div className="relative">
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
@@ -72,6 +73,16 @@ const SignIn = () => {
                 required
                 className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:border-black pr-10"
               />
+              <span
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 cursor-pointer text-gray-500 hover:text-black transition-colors"
+              >
+                {showPassword ? (
+                  <EyeTwoTone twoToneColor="#000000" />
+                ) : (
+                  <EyeInvisibleOutlined />
+                )}
+              </span>
             </div>
           </div>
 

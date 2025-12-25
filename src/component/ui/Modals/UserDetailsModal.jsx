@@ -84,7 +84,7 @@ const UserDetailsModal = ({ isOpen, user, type, onClose }) => {
             <span>{user?.state || "New York"}</span>
           </div>
           <div className="flex justify-between">
-            <span className="font-medium text-gray-600">zipCode:</span>
+            <span className="font-medium text-gray-600">Zip Code:</span>
             <span>{user?.zipCode || "New York"}</span>
           </div>
 

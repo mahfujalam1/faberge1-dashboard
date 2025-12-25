@@ -128,7 +128,7 @@ const Notifications = () => {
               <th className="px-6 py-3 text-left">Worker</th>
               <th className="px-6 py-3 text-left">Services</th>
               <th className="px-6 py-3 text-left">Payment Amount</th>
-              <th className="px-6 py-3 text-left">TransactionId</th>
+              <th className="px-6 py-3 text-left">Transaction Id</th>
               <th className="px-6 py-3 text-left">Date</th>
               <th className="px-6 py-3 text-center">Actions</th>
             </tr>

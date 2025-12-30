@@ -3,6 +3,8 @@ import { ScaleLoader } from "react-spinners";
 import { useDeleteManagerMutation } from "../../redux/features/dashboard/dashboardApi";
 import { toast } from "sonner";
 import { Popconfirm } from "antd";
+import UserDetailsModal from "../../component/ui/Modals/UserDetailsModal";
+import { useState } from "react";
 
 const ManagerList = ({
   onDelete,
@@ -13,6 +15,8 @@ const ManagerList = ({
   setSearchValue,
 }) => {
   const [deleteManager] = useDeleteManagerMutation();
+   const [openModal, setOpenModal] = useState(false);
+   const [detailsData, setDetailsData] = useState({});
 
   const handleDeleteConfirm = async (managerId) => {
     const res =await deleteManager(managerId);
@@ -21,6 +25,11 @@ const ManagerList = ({
     } else if (res?.data?.error) {
       toast.error(res?.error?.message);
     }
+  };
+
+  const handleViewManager = (data) => {
+    setOpenModal(true);
+    setDetailsData(data);
   };
 
   return (
@@ -41,7 +50,7 @@ const ManagerList = ({
             <tr>
               <th className="px-6 py-3 text-left">Manager</th>
               <th className="px-6 py-3 text-left">ID#</th>
-              <th className="px-6 py-3 text-left">Mail</th>
+              <th className="px-6 py-3 text-left">EMail</th>
               <th className="px-6 py-3 text-left">Status</th>
               <th className="px-6 py-3 text-center">Access</th>
               <th className="px-6 py-3 text-center">Actions</th>
@@ -57,13 +66,17 @@ const ManagerList = ({
                 >
                   <td className="px-6 py-3 flex items-center gap-3">
                     <img
+                      onClick={() => handleViewManager(manager)}
                       src={`${import.meta.env.VITE_REACT_APP_BASE_URL}${
                         manager?.uploadPhoto
                       }`}
                       alt={manager?.firstName}
                       className="w-9 h-9 rounded-full object-cover"
                     />
-                    <span className="text-[#e91e63] font-medium cursor-pointer hover:underline">
+                    <span
+                      onClick={() => handleViewManager(manager)}
+                      className="text-[#e91e63] font-medium cursor-pointer hover:underline"
+                    >
                       {manager?.firstName + " " + manager?.lastName}
                     </span>
                   </td>
@@ -132,6 +145,11 @@ const ManagerList = ({
             )}
           </tbody>
         </table>
+        <UserDetailsModal
+          isOpen={openModal}
+          onClose={() => setOpenModal(false)}
+          user={detailsData}
+        />
       </div>
     </div>
   );

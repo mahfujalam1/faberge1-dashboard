@@ -46,7 +46,7 @@ const UserDetailsModal = ({ isOpen, user, type, onClose }) => {
         {/* Header */}
         <div className="text-center mb-6">
           <h2 className="text-2xl font-semibold text-gray-800">
-            {user?.role === "worker" ? "Worker Details" : "Customer Details"}
+            {user?.role === "worker" ? "Worker Details" : "Customer Details" && user?.role === "manager" ? "Manager Details" : "Customer Details"}
           </h2>
         </div>
 

@@ -25,9 +25,12 @@ const BookingsPage = () => {
 
   const [deleteBooking] = useDeleteBookingMutation();
 
-  const filteredBookings = bookings?.filter((b) =>
-    b.customer?.firstName.toLowerCase().includes(searchValue.toLowerCase())
-  );
+  // Filter out pending bookings first, then apply search filter
+  const filteredBookings = bookings
+    ?.filter((b) => b.status !== "pending") // Remove pending bookings
+    ?.filter((b) =>
+      b.customer?.firstName.toLowerCase().includes(searchValue.toLowerCase())
+    );
 
   // Format date and convert 24-hour time to 12-hour format
   const formatDateTime = (dateString, startTime) => {

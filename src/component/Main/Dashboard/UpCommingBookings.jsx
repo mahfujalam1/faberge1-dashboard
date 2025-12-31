@@ -115,9 +115,9 @@ const UpcomingBooking = () => {
 
                   <td className="px-6 py-3">
                     <span
-                      className={`text-xs px-3 py-1 rounded-full font-medium bg-orange-100 text-orange-500}`}
+                      className={`text-xs px-3 py-1 rounded-full font-medium bg-blue-100 text-blue-700}`}
                     >
-                      Upcoming
+                      Booked
                     </span>
                   </td>
 

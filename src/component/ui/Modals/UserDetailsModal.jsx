@@ -46,7 +46,11 @@ const UserDetailsModal = ({ isOpen, user, type, onClose }) => {
         {/* Header */}
         <div className="text-center mb-6">
           <h2 className="text-2xl font-semibold text-gray-800">
-            {user?.role === "worker" ? "Worker Details" : "Customer Details" && user?.role === "manager" ? "Manager Details" : "Customer Details"}
+            {user?.role === "worker"
+              ? "Worker Details"
+              : "Customer Details" && user?.role === "manager"
+              ? "Manager Details"
+              : "Customer Details"}
           </h2>
         </div>
 
@@ -105,6 +109,23 @@ const UserDetailsModal = ({ isOpen, user, type, onClose }) => {
             </>
           )}
 
+          {user?.role === "manager" && (
+            <>
+              <div className="flex justify-between">
+                <span className="font-medium text-gray-600">Email:</span>
+                <span>{user?.email}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-medium text-gray-600">Phone:</span>
+                <span>{user?.phone}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="font-medium text-gray-600">User Type</span>
+                <span>{user?.role}</span>
+              </div>
+            </>
+          )}
+
           {user?.role === "worker" && (
             <>
               <div className="flex justify-between">
@@ -137,28 +158,30 @@ const UserDetailsModal = ({ isOpen, user, type, onClose }) => {
         </div>
 
         {/* Footer Buttons */}
-        <div className="flex justify-center gap-4 mt-4">
-          <button
-            onClick={() => handleBlock(user?._id)}
-            className={`${
-              isLoading ? "bg-gray-400" : "bg-[#e91e63]"
-            } text-white px-6 py-2 rounded-md hover:bg-pink-600 transition-all font-medium w-full`}
-          >
-            {isLoading ? (
-              <div className="animate-spin border-t-2 border-b-2 border-white w-4 h-4 rounded-full mx-auto"></div> // Spinner while loading
-            ) : user?.isBlocked ? (
-              "Blocked" // Show "Blocked" text if user is blocked
-            ) : (
-              "Block" // Show "Block" text by default
-            )}
-          </button>
-          <button
-            onClick={onClose}
-            className="border border-[#e91e63] text-[#e91e63] px-6 py-2 rounded-md hover:bg-pink-50 transition-all font-medium w-full"
-          >
-            {type === "worker" ? "Edit" : "Cancel"}
-          </button>
-        </div>
+        {user?.role === "manager" ? null : (
+          <div className="flex justify-center gap-4 mt-4">
+            <button
+              onClick={() => handleBlock(user?._id)}
+              className={`${
+                isLoading ? "bg-gray-400" : "bg-[#e91e63]"
+              } text-white px-6 py-2 rounded-md hover:bg-pink-600 transition-all font-medium w-full`}
+            >
+              {isLoading ? (
+                <div className="animate-spin border-t-2 border-b-2 border-white w-4 h-4 rounded-full mx-auto"></div> // Spinner while loading
+              ) : user?.isBlocked ? (
+                "Blocked" // Show "Blocked" text if user is blocked
+              ) : (
+                "Block" // Show "Block" text by default
+              )}
+            </button>
+            <button
+              onClick={onClose}
+              className="border border-[#e91e63] text-[#e91e63] px-6 py-2 rounded-md hover:bg-pink-50 transition-all font-medium w-full"
+            >
+              {type === "worker" ? "Edit" : "Cancel"}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

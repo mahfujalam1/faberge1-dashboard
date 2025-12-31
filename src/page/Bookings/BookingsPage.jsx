@@ -25,9 +25,9 @@ const BookingsPage = () => {
 
   const [deleteBooking] = useDeleteBookingMutation();
 
-  // Filter out pending bookings first, then apply search filter
+  // Filter to show only booked and completed bookings, then apply search filter
   const filteredBookings = bookings
-    ?.filter((b) => b.status !== "pending") // Remove pending bookings
+    ?.filter((b) => b.status === "booked" || b.status === "completed") // Only show booked and completed
     ?.filter((b) =>
       b.customer?.firstName.toLowerCase().includes(searchValue.toLowerCase())
     );
@@ -190,14 +190,12 @@ const BookingsPage = () => {
                         className={`text-xs px-3 py-1 rounded-full font-medium ${
                           booking.status === "completed"
                             ? "bg-green-100 text-green-700"
-                            : booking.status === "pending"
-                            ? "bg-yellow-100 text-yellow-700"
-                            : "bg-green-100 text-green-700"
+                            : booking.status === "booked"
+                            ? "bg-blue-100 text-blue-700"
+                            : "bg-gray-100 text-gray-700"
                         }`}
                       >
-                        {booking.status === "expired"
-                          ? "pending"
-                          : booking?.status}
+                        {booking?.status}
                       </span>
                     </td>
 

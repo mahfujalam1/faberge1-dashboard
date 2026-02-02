@@ -196,7 +196,6 @@ const CreateWorkerModal = ({ isOpen, onClose }) => {
               <p className="text-sm text-gray-600 mt-2">
                 Upload a professional photo
               </p>
-              <p className="text-xs text-gray-400">JPG, PNG, GIF up to 1MB</p>
             </>
           )}
           <input

@@ -6,7 +6,6 @@ export const baseApi = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: `${import.meta.env.VITE_REACT_APP_BASE_URL}`,
     prepareHeaders: (headers) => {
-      // Retrieve the token from your store or local storage
       const token = localStorage.getItem("token");
       if (token) {
         headers.set("Authorization", `Bearer ${token}`);

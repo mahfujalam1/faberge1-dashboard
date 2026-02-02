@@ -27,10 +27,6 @@ const BookingsPage = () => {
 
   // Filter to show only booked and completed bookings, then apply search filter
   const filteredBookings = bookings
-    ?.filter((b) => b.status === "booked" || b.status === "completed") // Only show booked and completed
-    ?.filter((b) =>
-      b.customer?.firstName.toLowerCase().includes(searchValue.toLowerCase())
-    );
 
   // Format date and convert 24-hour time to 12-hour format
   const formatDateTime = (dateString, startTime) => {

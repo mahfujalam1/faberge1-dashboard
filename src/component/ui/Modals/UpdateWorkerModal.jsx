@@ -90,13 +90,7 @@ const UpdateWorkerModal = ({ isOpen, onClose, workerData }) => {
         "image/png",
         "image/gif",
       ];
-      if (!allowedTypes.includes(file.type)) {
-        const errorMsg = "Only JPG, PNG, and GIF files are allowed";
-        setImageError(errorMsg);
-        toast.error(errorMsg);
-        e.target.value = ""; // Reset file input
-        return;
-      }
+      
 
       // Check file size (5MB = 5 * 1024 * 1024 bytes)
       const maxSize = 5 * 1024 * 1024; // 5MB in bytes

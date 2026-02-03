@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Button, Popconfirm } from "antd";
 import { DeleteOutlined } from "@ant-design/icons";
 import { ScaleLoader } from "react-spinners";
@@ -11,7 +11,6 @@ import {
 const Notifications = () => {
   const [currentPage, setCurrentPage] = useState(1); // State to hold the current page
   const [searchValue, setSearchValue] = useState("");
-  const [selectedBooking, setSelectedBooking] = useState(null);
 
   const [deleteNotification] = useDeleteNotificationMutation();
 
@@ -61,9 +60,6 @@ const Notifications = () => {
       .join(" | ");
   };
 
-  const handleView = (booking) => {
-    setSelectedBooking(booking);
-  };
 
   const handlePageChange = (page) => {
     setCurrentPage(page);

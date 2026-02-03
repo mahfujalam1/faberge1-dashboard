@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { EyeOutlined, DeleteOutlined } from "@ant-design/icons";
+import { EyeOutlined } from "@ant-design/icons";
 import { useGetUpcomingBookingsQuery } from "../../../redux/features/dashboard/dashboardApi";
 import BookingDetailsModal from "../../ui/Modals/BookingDetailsModal";
 import { ScaleLoader } from "react-spinners";

@@ -21,7 +21,7 @@ const HelpSupport = () => {
 
   const handleDelete = async (id) => {
     try {
-      await deleteContactUs(id)
+      await deleteContactUs(id);
     } catch (error) {
       console.error("Failed to delete message:", error);
     }
@@ -29,12 +29,24 @@ const HelpSupport = () => {
 
   const formatDateTime = (dateString) => {
     const date = new Date(dateString);
+
     const formattedDate = date.toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
       day: "numeric",
+      timeZone: "UTC",
     });
+
     return `${formattedDate}`;
+  };
+
+  const formattedTime = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+      timeZone: "UTC",
+    });
   };
 
   return (
@@ -52,6 +64,7 @@ const HelpSupport = () => {
               <th className="px-6 py-3 w-[180px]">Subject</th>
               <th className="px-6 py-3 w-[300px]">Message</th>
               <th className="px-6 py-3 w-[120px]">Date</th>
+              <th className="px-6 py-3 w-[120px]">Time</th>
               <th className="px-6 py-3 w-[100px]">Action</th>
             </tr>
           </thead>
@@ -95,6 +108,10 @@ const HelpSupport = () => {
 
                   <td className="px-6 py-3 text-gray-500">
                     {formatDateTime(msg.createdAt)}
+                  </td>
+
+                  <td className="px-6 py-3 text-gray-500">
+                    {formattedTime(msg.createdAt)}
                   </td>
 
                   <td className="px-6 py-3">

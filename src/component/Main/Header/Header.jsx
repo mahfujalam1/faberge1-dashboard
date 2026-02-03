@@ -1,16 +1,10 @@
 /* eslint-disable react/prop-types */
 
-import { Link, useNavigate } from "react-router-dom";
-import { FiMenu } from "react-icons/fi";
+import { Link, } from "react-router-dom";
 import { IoNotificationsOutline } from "react-icons/io5";
-// import { useSelector } from "react-redux";
-// import { imageBaseUrl } from "../../../config/imageBaseUrl";
-import { RiNotificationFill } from "react-icons/ri";
 import { RxAvatar } from "react-icons/rx";
 
-const Header = ({ toggleSidebar }) => {
-  const navigate = useNavigate();
-  // const { user } = useSelector((state) => state.auth);
+const Header = () => {
 
   return (
     <div className="w-full px-7 py-3.5 bg-white flex justify-between items-center  sticky top-0 left-0 z-10 shadow-lg rounded-lg">

@@ -29,11 +29,16 @@ const TransactionsPage = () => {
       month: "short",
       day: "numeric",
     });
-    const formattedTime = date.toLocaleTimeString("en-US", {
+    return `${formattedDate},`;
+  };
+
+  const formattedTime = (dateString) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString("en-US", {
       hour: "2-digit",
       minute: "2-digit",
+      timeZone: "UTC",
     });
-    return `${formattedDate}, ${formattedTime}`;
   };
 
   return (
@@ -47,6 +52,7 @@ const TransactionsPage = () => {
               <th className="px-6 py-3">User Name</th>
               <th className="px-6 py-3">Service</th>
               <th className="px-6 py-3">Date</th>
+              <th className="px-6 py-3">Time</th>
               <th className="px-6 py-3">Payment Method</th>
               <th className="px-6 py-3">Amount</th>
               <th className="px-6 py-3">Transaction ID</th>
@@ -88,6 +94,12 @@ const TransactionsPage = () => {
                   {/* Date */}
                   <td className="px-6 py-3 text-gray-600">
                     {formatDateTime(item?.createdAt)}
+                  </td>
+
+
+                  {/* Time */}
+                  <td className="px-6 py-3 text-gray-600">
+                    {formattedTime(item?.createdAt)}
                   </td>
 
                   {/* Payment Method */}

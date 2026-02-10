@@ -25,21 +25,21 @@ const Notifications = () => {
   const pagination = data?.pagination;
 
   const filteredBookings = bookings?.filter((b) =>
-    b.customer?.firstName.toLowerCase().includes(searchValue.toLowerCase())
+    b.customer?.firstName.toLowerCase().includes(searchValue.toLowerCase()),
   );
 
   // Format date and time
   const formatDateTime = (dateString) => {
-    const date = new Date(dateString);
-    const formattedDate = date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-    const formattedTime = date.toLocaleTimeString("en-US", {
+    const [datePart, timePart] = dateString.split("T");
+
+    const dateObj = new Date(dateString);
+
+    const formattedDate = datePart; // exact date
+    const formattedTime = dateObj.toLocaleTimeString("en-US", {
       hour: "2-digit",
       minute: "2-digit",
     });
+
     return `${formattedDate}, ${formattedTime}`;
   };
 
@@ -59,7 +59,6 @@ const Notifications = () => {
       })
       .join(" | ");
   };
-
 
   const handlePageChange = (page) => {
     setCurrentPage(page);
@@ -92,7 +91,7 @@ const Notifications = () => {
           }`}
         >
           {i}
-        </Button>
+        </Button>,
       );
     }
     return buttons;

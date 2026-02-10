@@ -30,12 +30,8 @@ const BookingsPage = () => {
 
   // Format date and convert 24-hour time to 12-hour format
   const formatDateTime = (dateString, startTime) => {
-    const date = new Date(dateString);
-    const formattedDate = date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
+    // Split date from ISO string (YYYY-MM-DD)
+    const formattedDate = dateString?.split("T")[0];
 
     // Convert startTime (e.g., "14:00") to 12-hour format
     let formattedTime = "N/A";
@@ -43,7 +39,7 @@ const BookingsPage = () => {
       const [hours, minutes] = startTime.split(":");
       const hour = parseInt(hours, 10);
       const period = hour >= 12 ? "PM" : "AM";
-      const hour12 = hour % 12 || 12; // Convert 0 to 12 for midnight
+      const hour12 = hour % 12 || 12;
       formattedTime = `${hour12}:${minutes} ${period}`;
     }
 

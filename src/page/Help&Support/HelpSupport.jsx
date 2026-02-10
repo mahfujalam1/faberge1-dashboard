@@ -28,16 +28,18 @@ const HelpSupport = () => {
   };
 
   const formatDateTime = (dateString) => {
-    const date = new Date(dateString);
+    // Date part from ISO
+    const formattedDate = dateString?.split("T")[0];
 
-    const formattedDate = date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
+    // Time part (same as before)
+    const date = new Date(dateString);
+    const formattedTime = date.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
       timeZone: "UTC",
     });
 
-    return `${formattedDate}`;
+    return `${formattedDate}, ${formattedTime}`;
   };
 
   const formattedTime = (dateString) => {

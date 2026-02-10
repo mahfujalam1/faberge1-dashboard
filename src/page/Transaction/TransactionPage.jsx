@@ -23,13 +23,10 @@ const TransactionsPage = () => {
   };
 
   const formatDateTime = (dateString) => {
-    const date = new Date(dateString);
-    const formattedDate = date.toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    });
-    return `${formattedDate},`;
+    // Split date from ISO string (YYYY-MM-DD)
+    const formattedDate = dateString?.split("T")[0];
+
+    return `${formattedDate}`;
   };
 
   const formattedTime = (dateString) => {

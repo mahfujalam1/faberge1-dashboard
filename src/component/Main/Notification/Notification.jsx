@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button, Popconfirm } from "antd";
+import { Button, Popconfirm, Table } from "antd";
 import { DeleteOutlined } from "@ant-design/icons";
 import { ScaleLoader } from "react-spinners";
 import { toast } from "sonner";
@@ -9,12 +9,10 @@ import {
 } from "../../../redux/features/booking/booking";
 
 const Notifications = () => {
-  const [currentPage, setCurrentPage] = useState(1); // State to hold the current page
-  const [searchValue, setSearchValue] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
 
   const [deleteNotification] = useDeleteNotificationMutation();
 
-  // Fetch data based on current page and search value
   const limit = 10;
   const { data, isLoading } = useGetAllNotificationsQuery({
     page: currentPage,
@@ -24,29 +22,18 @@ const Notifications = () => {
   const bookings = data?.notification;
   const pagination = data?.pagination;
 
-  const filteredBookings = bookings?.filter((b) =>
-    b.customer?.firstName.toLowerCase().includes(searchValue.toLowerCase()),
-  );
-
-  // Format date and time
   const formatDateTime = (dateString) => {
-    const [datePart, timePart] = dateString.split("T");
-
+    const datePart = dateString.split("T")[0];
     const dateObj = new Date(dateString);
-
-    const formattedDate = datePart; // exact date
     const formattedTime = dateObj.toLocaleTimeString("en-US", {
       hour: "2-digit",
       minute: "2-digit",
     });
-
-    return `${formattedDate}, ${formattedTime}`;
+    return `${datePart}, ${formattedTime}`;
   };
 
-  // Format services display
   const formatServices = (services) => {
     if (!services || services.length === 0) return "N/A";
-
     return services
       .map((serviceItem) => {
         const mainService =
@@ -54,50 +41,11 @@ const Notifications = () => {
         const subServices = serviceItem.service?.subcategory
           ?.map((sub) => sub.subcategoryName)
           .join(", ");
-
         return subServices ? `${mainService} (${subServices})` : mainService;
       })
       .join(" | ");
   };
 
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-  };
-
-  // Pagination logic
-  const handlePreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
-
-  const handleNextPage = () => {
-    if (bookings?.length === limit) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
-
-  const renderPageButtons = () => {
-    let buttons = [];
-    for (let i = 1; i <= pagination?.totalPages; i++) {
-      buttons.push(
-        <Button
-          key={i}
-          onClick={() => handlePageChange(i)}
-          className={`${
-            currentPage === i
-              ? "bg-pink-500 text-white"
-              : "bg-white text-pink-500 border-pink-500"
-          }`}
-        >
-          {i}
-        </Button>,
-      );
-    }
-    return buttons;
-  };
-
-  // Handle delete notification
   const handleDeleteNotification = async (notificationId) => {
     const res = await deleteNotification(notificationId);
     if (res?.data) {
@@ -107,109 +55,127 @@ const Notifications = () => {
     }
   };
 
+  const columns = [
+    {
+      title: "Customer",
+      key: "customer",
+      render: (_, booking) => (
+        <span>
+          {booking?.customer?.firstName + " " + booking?.customer?.lastName}
+        </span>
+      ),
+    },
+    {
+      title: "Worker",
+      key: "worker",
+      render: (_, booking) => (
+        <span>
+          {booking?.worker?.firstName + " " + booking?.worker?.lastName}
+        </span>
+      ),
+    },
+    {
+      title: "Services",
+      key: "services",
+      render: (_, booking) => (
+        <span className="text-gray-600">
+          {formatServices(booking?.services)}
+        </span>
+      ),
+    },
+    {
+      title: "Payment Amount",
+      key: "paymentAmount",
+      render: (_, booking) => <span>${booking?.paymentAmount}</span>,
+    },
+    {
+      title: "Transaction ID",
+      dataIndex: "transactionId",
+      key: "transactionId",
+    },
+    {
+      title: "Date",
+      key: "date",
+      render: (_, booking) => (
+        <span className="text-gray-600">
+          {formatDateTime(booking?.createdAt)}
+        </span>
+      ),
+    },
+    {
+      title: "Actions",
+      key: "actions",
+      align: "center",
+      render: (_, booking) => (
+        <div className="flex justify-center text-[#e91e63]">
+          <Popconfirm
+            title="Delete Notification"
+            description="Are you sure you want to delete this notification?"
+            onConfirm={() => handleDeleteNotification(booking._id)}
+            okText="Yes"
+            cancelText="No"
+            okButtonProps={{ className: "bg-pink-500 hover:bg-pink-600" }}
+          >
+            <DeleteOutlined className="cursor-pointer hover:text-pink-500 text-lg text-[#e91e63]" />
+          </Popconfirm>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <div className="min-h-screen p-6 overflow-x-auto md:w-[420px] lg:w-[680px] xl:w-full">
-      {/* Page Title */}
       <h1 className="text-xl font-semibold text-gray-800 mb-5">
         Notifications
       </h1>
 
-      {/* Notifications Table */}
-      <div className="overflow-x-auto scrollbar-thin scrollbar-thumb-pink-200 scrollbar-track-pink-50">
-        <table className="min-w-[900px] w-full text-sm text-gray-700">
-          <thead className="bg-pink-50 text-gray-700 uppercase text-sm font-bold">
-            <tr>
-              <th className="px-6 py-3 text-left">Customer</th>
-              <th className="px-6 py-3 text-left">Worker</th>
-              <th className="px-6 py-3 text-left">Services</th>
-              <th className="px-6 py-3 text-left">Payment Amount</th>
-              <th className="px-6 py-3 text-left">Transaction Id</th>
-              <th className="px-6 py-3 text-left">Date</th>
-              <th className="px-6 py-3 text-center">Actions</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {filteredBookings?.length > 0 ? (
-              filteredBookings?.map((booking) => (
-                <tr
-                  key={booking?._id}
-                  className="border-b border-gray-400 hover:bg-pink-50 transition-all text-sm"
-                >
-                  <td className="px-6 py-3">
-                    {booking?.customer?.firstName +
-                      " " +
-                      booking?.customer?.lastName}
-                  </td>
-                  <td className="px-6 py-3">
-                    {booking?.worker?.firstName +
-                      " " +
-                      booking?.worker?.lastName}
-                  </td>
-                  <td className="px-6 py-3">
-                    {formatServices(booking?.services)}
-                  </td>
-                  <td className="px-6 py-3">${booking?.paymentAmount}</td>
-                  <td className="px-6 py-3">{booking?.transactionId}</td>
-                  <td className="px-6 py-3">
-                    {formatDateTime(booking?.createdAt)}
-                  </td>
-                  <td className="px-6 py-3 text-center">
-                    <Popconfirm
-                      title="Delete Notification"
-                      description="Are you sure you want to delete this notification?"
-                      onConfirm={() => handleDeleteNotification(booking._id)}
-                      okText="Yes"
-                      cancelText="No"
-                      okButtonProps={{
-                        className: "bg-pink-500 hover:bg-pink-600",
-                      }}
-                    >
-                      <DeleteOutlined className="cursor-pointer hover:text-pink-500 text-lg text-[#e91e63]" />
-                    </Popconfirm>
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td
-                  colSpan="7"
-                  className="text-center py-6 text-gray-500 text-sm"
-                >
-                  {isLoading ? (
-                    <div className="flex items-center justify-center text-center">
-                      <ScaleLoader color="#ff0db4" />
-                    </div>
-                  ) : (
-                    "No notifications found"
-                  )}
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-
-        {/* Pagination */}
-        <div className="flex justify-center items-center space-x-4 py-4">
-          <Button
-            onClick={handlePreviousPage}
-            disabled={currentPage === 1}
-            className="bg-pink-500 text-white"
-          >
-            Previous
-          </Button>
-
-          {/* Dynamic page number buttons */}
-          <div className="flex space-x-2">{renderPageButtons()}</div>
-
-          <Button
-            onClick={handleNextPage}
-            disabled={currentPage === pagination?.totalPages}
-            className="bg-pink-500 text-white"
-          >
-            Next
-          </Button>
-        </div>
+      <div className="bg-white rounded-xl shadow-sm border border-pink-100 mt-4">
+        <Table
+          columns={columns}
+          dataSource={bookings}
+          rowKey="_id"
+          loading={isLoading}
+          scroll={{ x: 900 }}
+          pagination={{
+            current: currentPage,
+            pageSize: limit,
+            total: pagination?.total,
+            position: ["bottomCenter"],
+            onChange: (page) => setCurrentPage(page),
+            showSizeChanger: false,
+            itemRender: (page, type, originalElement) => {
+              if (type === "prev") {
+                return (
+                  <Button className="bg-pink-500 text-white border-none">
+                    Previous
+                  </Button>
+                );
+              }
+              if (type === "next") {
+                return (
+                  <Button className="bg-pink-500 text-white border-none">
+                    Next
+                  </Button>
+                );
+              }
+              if (type === "page") {
+                return (
+                  <Button
+                    className={
+                      currentPage === page
+                        ? "bg-pink-500 text-white border-none"
+                        : "bg-white text-pink-500 border-pink-500"
+                    }
+                  >
+                    {page}
+                  </Button>
+                );
+              }
+              return originalElement;
+            },
+          }}
+          rowClassName="border-b border-pink-100 hover:bg-pink-50 transition-all"
+        />
       </div>
     </div>
   );

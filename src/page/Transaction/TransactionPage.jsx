@@ -3,15 +3,15 @@ import {
   useDeleteTransactionMutation,
   useGetAllTransactionsQuery,
 } from "../../redux/features/booking/booking";
-import { Popconfirm } from "antd";
+import { Popconfirm, Table } from "antd";
 import { DeleteOutlined } from "@ant-design/icons";
+import { toast } from "sonner";
 
 const TransactionsPage = () => {
   const { data, isLoading } = useGetAllTransactionsQuery();
   const mockTransactions = data?.transactions;
-  console.log(mockTransactions);
 
-  const [deleteTransaction] = useDeleteTransactionMutation(); // Mutation for deleting transaction
+  const [deleteTransaction] = useDeleteTransactionMutation();
 
   const handleDeleteTransaction = async (transactionId) => {
     const res = await deleteTransaction(transactionId);
@@ -23,10 +23,7 @@ const TransactionsPage = () => {
   };
 
   const formatDateTime = (dateString) => {
-    // Split date from ISO string (YYYY-MM-DD)
-    const formattedDate = dateString?.split("T")[0];
-
-    return `${formattedDate}`;
+    return dateString?.split("T")[0];
   };
 
   const formattedTime = (dateString) => {
@@ -38,113 +35,101 @@ const TransactionsPage = () => {
     });
   };
 
+  const columns = [
+    {
+      title: "User Name",
+      key: "userName",
+      render: (_, item) => (
+        <div className="flex items-center gap-3">
+          <img
+            src={`${import.meta.env.VITE_REACT_APP_BASE_URL}${item?.worker?.uploadPhoto}`}
+            alt={item?.worker?.firstName}
+            className="w-9 h-9 rounded-full object-cover"
+          />
+          <span className="text-[#e91e63] font-medium cursor-pointer hover:underline">
+            {item?.worker?.firstName + " " + item?.worker?.lastName}
+          </span>
+        </div>
+      ),
+    },
+    {
+      title: "Service",
+      key: "service",
+      render: (_, item) => (
+        <ul className="list-none m-0 p-0">
+          {item?.services?.map((service) => (
+            <li key={service?.service?._id}>{service?.service?.serviceName}</li>
+          ))}
+        </ul>
+      ),
+    },
+    {
+      title: "Date",
+      key: "date",
+      render: (_, item) => (
+        <span className="text-gray-600">{formatDateTime(item?.createdAt)}</span>
+      ),
+    },
+    {
+      title: "Time",
+      key: "time",
+      render: (_, item) => (
+        <span className="text-gray-600">{formattedTime(item?.createdAt)}</span>
+      ),
+    },
+    {
+      title: "Payment Method",
+      key: "paymentMethod",
+      render: () => <span className="font-medium">Stripe</span>,
+    },
+    {
+      title: "Amount",
+      key: "amount",
+      render: (_, item) => (
+        <span className="font-semibold text-gray-800">
+          ${item?.paymentAmount}
+        </span>
+      ),
+    },
+    {
+      title: "Transaction ID",
+      dataIndex: "transactionId",
+      key: "transactionId",
+      render: (id) => <span className="text-gray-600 font-mono">{id}</span>,
+    },
+    {
+      title: "Actions",
+      key: "actions",
+      align: "center",
+      render: (_, item) => (
+        <div className="flex justify-center text-[#e91e63]">
+          <Popconfirm
+            title="Are you sure you want to delete this transaction?"
+            onConfirm={() => handleDeleteTransaction(item._id)}
+            okText="Yes"
+            cancelText="No"
+          >
+            <DeleteOutlined className="cursor-pointer hover:text-pink-500 text-lg" />
+          </Popconfirm>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <div className="p-6 overflow-x-auto md:w-[420px] lg:w-[680px] xl:w-full">
       <h1 className="text-xl font-semibold text-gray-800 mb-4">Transactions</h1>
 
-      <div className="overflow-x-auto bg-white rounded-xl shadow-sm border border-pink-100">
-        <table className="w-full text-sm text-left text-gray-700 min-w-[900px]">
-          <thead className="bg-pink-50 uppercase text-xs text-gray-600">
-            <tr>
-              <th className="px-6 py-3">User Name</th>
-              <th className="px-6 py-3">Service</th>
-              <th className="px-6 py-3">Date</th>
-              <th className="px-6 py-3">Time</th>
-              <th className="px-6 py-3">Payment Method</th>
-              <th className="px-6 py-3">Amount</th>
-              <th className="px-6 py-3">Transaction ID</th>
-              <th className="px-6 py-3">Actions</th>{" "}
-              {/* Added actions column */}
-            </tr>
-          </thead>
-
-          <tbody>
-            {mockTransactions?.length > 0 ? (
-              mockTransactions?.map((item) => (
-                <tr
-                  key={item?._id}
-                  className="border-b border-pink-100 hover:bg-pink-50 transition-all"
-                >
-                  {/* User Name */}
-                  <td className="px-6 py-3 flex items-center gap-3">
-                    <img
-                      src={`${import.meta.env.VITE_REACT_APP_BASE_URL}${
-                        item?.worker?.uploadPhoto
-                      }`}
-                      alt={item?.worker?.firstName}
-                      className="w-9 h-9 rounded-full object-cover"
-                    />
-                    <span className="text-[#e91e63] font-medium cursor-pointer hover:underline">
-                      {item?.worker?.firstName + " " + item?.worker?.lastName}
-                    </span>
-                  </td>
-
-                  {/* Service */}
-                  <td className="px-6 py-3 text-gray-700">
-                    {item?.services?.map((service) => (
-                      <ul key={service?.service?._id}>
-                        <li>{service?.service?.serviceName}</li>
-                      </ul>
-                    ))}
-                  </td>
-
-                  {/* Date */}
-                  <td className="px-6 py-3 text-gray-600">
-                    {formatDateTime(item?.createdAt)}
-                  </td>
-
-
-                  {/* Time */}
-                  <td className="px-6 py-3 text-gray-600">
-                    {formattedTime(item?.createdAt)}
-                  </td>
-
-                  {/* Payment Method */}
-                  <td className="px-6 py-3 text-gray-700">
-                    <span className="font-medium">Stripe</span>
-                  </td>
-
-                  {/* Amount */}
-                  <td className="px-6 py-3 font-semibold text-gray-800">
-                    ${item?.paymentAmount}
-                  </td>
-
-                  {/* Transaction ID */}
-                  <td className="px-6 py-3 text-gray-600 font-mono">
-                    {item?.transactionId}
-                  </td>
-
-                  {/* Actions */}
-                  <td className="px-6 py-3 text-right flex justify-center gap-4 text-[#e91e63]">
-                    <Popconfirm
-                      title="Are you sure you want to delete this transaction?"
-                      onConfirm={() => handleDeleteTransaction(item._id)} // Call delete function on confirmation
-                      okText="Yes"
-                      cancelText="No"
-                    >
-                      <DeleteOutlined className="cursor-pointer hover:text-pink-500 text-lg" />
-                    </Popconfirm>
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td
-                  colSpan="7"
-                  className="text-center py-6 text-gray-500 text-sm"
-                >
-                  {isLoading ? (
-                    <div className="flex items-center justify-center text-center">
-                      <ScaleLoader color="#ff0db4" />
-                    </div>
-                  ) : (
-                    "No Transaction found"
-                  )}
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+      <div className="bg-white rounded-xl shadow-sm border border-pink-100 mt-4">
+        <Table
+          columns={columns}
+          dataSource={mockTransactions}
+          rowKey="_id"
+          loading={isLoading}
+          scroll={{ x: 900 }}
+          pagination={false}
+          rowClassName="border-b border-pink-100 hover:bg-pink-50 transition-all"
+        />
       </div>
     </div>
   );

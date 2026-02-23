@@ -4,7 +4,7 @@ import {
   SearchOutlined,
   EditOutlined,
 } from "@ant-design/icons";
-import { Input, Button, Popconfirm } from "antd";
+import { Input, Button, Popconfirm, Table } from "antd";
 import { useState } from "react";
 import {
   useDeleteWorkerMutation,
@@ -16,31 +16,24 @@ import { toast } from "sonner";
 import UpdateWorkerModal from "../../ui/Modals/UpdateWorkerModal";
 
 const WorkerTable = () => {
-  const [searchValue, setSearchValue] = useState(""); // Search term for filtering
-  const [currentPage, setCurrentPage] = useState(1); // Page number for pagination
-  const [openModal, setOpenModal] = useState(false); // Modal state for details
-  const [openUpdateModal, setOpenUpdateModal] = useState(false); // Modal state for update
-  const [detailsData, setDetailsData] = useState({}); // Store the details of selected worker
-  const [updateData, setUpdateData] = useState({}); // Store the data for updating worker
+  const [searchValue, setSearchValue] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [openModal, setOpenModal] = useState(false);
+  const [openUpdateModal, setOpenUpdateModal] = useState(false);
+  const [detailsData, setDetailsData] = useState({});
+  const [updateData, setUpdateData] = useState({});
 
-  const [deleteWorker] = useDeleteWorkerMutation(); // Mutation hook for deleting a worker
+  const [deleteWorker] = useDeleteWorkerMutation();
 
-  // Define page size (limit)
   const limit = 8;
 
-  // Fetch data based on search term, current page, and limit
   const { data, isLoading } = useGetAllWorkersQuery({
     page: currentPage,
     limit,
     searchTerm: searchValue,
   });
   const pagination = data?.pagination;
-
   const filteredData = data?.data;
-
-  const handlePageChange = (page) => {
-    setCurrentPage(page);
-  };
 
   const handleViewWorker = (data) => {
     setOpenModal(true);
@@ -52,53 +45,112 @@ const WorkerTable = () => {
     setUpdateData(data);
   };
 
-  // Pagination logic
-  const handlePreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
-
-  const handleNextPage = () => {
-    if (filteredData?.length === limit) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
-
-  const renderPageButtons = () => {
-    let buttons = [];
-    for (let i = 1; i <= pagination?.totalPages; i++) {
-      buttons.push(
-        <Button
-          key={i}
-          onClick={() => handlePageChange(i)}
-          className={`${
-            currentPage === i
-              ? "bg-pink-500 text-white"
-              : "bg-white text-pink-500 border-pink-500"
-          }`}
-        >
-          {i}
-        </Button>
-      );
-    }
-    return buttons;
-  };
-
   const handleDeleteWorker = async (workerId) => {
-    const res = await deleteWorker(workerId); // Trigger the API call to delete the worker
-    if (res?.data.data) {
+    const res = await deleteWorker(workerId);
+    if (res?.data?.data) {
       toast.success(res?.data?.message);
     } else if (res?.data?.error) {
       toast.error(res?.error?.message);
     }
   };
 
+  const columns = [
+    {
+      title: "Worker",
+      key: "worker",
+      render: (_, worker) => (
+        <div className="flex items-center gap-3">
+          <img
+            src={`${import.meta.env.VITE_REACT_APP_BASE_URL}${worker?.uploadPhoto}`}
+            alt={worker?.firstName}
+            className="w-9 h-9 rounded-full object-cover"
+          />
+          <span
+            className="text-[#e91e63] font-medium cursor-pointer hover:underline"
+            onClick={() => handleViewWorker(worker)}
+          >
+            {worker?.firstName + " " + worker?.lastName}
+          </span>
+        </div>
+      ),
+    },
+    {
+      title: "Title",
+      key: "title",
+      render: (_, worker) => (
+        <span className="text-gray-700">{worker?.title || "Title"}</span>
+      ),
+    },
+    {
+      title: "ID#",
+      dataIndex: "workerId",
+      key: "workerId",
+      render: (id) => <span className="text-gray-700">{id}</span>,
+    },
+    {
+      title: "Location",
+      dataIndex: "address",
+      key: "address",
+      render: (address) => <span className="text-gray-700">{address}</span>,
+    },
+    {
+      title: "Services",
+      key: "services",
+      render: (_, worker) => (
+        <ul className="list-none m-0 p-0">
+          {worker?.services?.map((service) => (
+            <li key={service?._id}>{service?.service?.serviceName}</li>
+          ))}
+        </ul>
+      ),
+    },
+    {
+      title: "Status",
+      key: "status",
+      render: (_, worker) => (
+        <span
+          className={`text-xs px-3 py-1 rounded-full font-medium ${
+            worker?.isBlocked
+              ? "bg-red-200 text-red-600"
+              : "bg-green-100 text-green-700"
+          }`}
+        >
+          {worker?.isBlocked ? "Blocked" : "Active"}
+        </span>
+      ),
+    },
+    {
+      title: "Actions",
+      key: "actions",
+      align: "center",
+      render: (_, worker) => (
+        <div className="flex justify-center gap-3 text-[#e91e63]">
+          <EyeOutlined
+            className="cursor-pointer hover:text-pink-500 text-lg"
+            onClick={() => handleViewWorker(worker)}
+          />
+          <EditOutlined
+            className="cursor-pointer hover:text-pink-500 text-lg"
+            onClick={() => handleEditWorker(worker)}
+          />
+          <Popconfirm
+            title="Are you sure you want to delete this worker?"
+            onConfirm={() => handleDeleteWorker(worker._id)}
+            okText="Yes"
+            cancelText="No"
+          >
+            <DeleteOutlined className="cursor-pointer hover:text-pink-500 text-lg" />
+          </Popconfirm>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <div className="bg-white rounded-xl shadow-sm border border-pink-100 mt-4">
       <div className="p-5 border-b border-pink-100">
         <Input
-          placeholder={`Search Workers...`}
+          placeholder="Search Workers..."
           prefix={<SearchOutlined className="text-[#e91e63]" />}
           value={searchValue}
           onChange={(e) => setSearchValue(e.target.value)}
@@ -106,137 +158,58 @@ const WorkerTable = () => {
         />
       </div>
 
-      <div className="w-full overflow-x-auto scrollbar-thin scrollbar-thumb-pink-200 scrollbar-track-pink-50">
-        <table className="min-w-[900px] w-full text-sm text-left text-gray-700">
-          <thead className="bg-pink-50 text-gray-700 uppercase text-xs">
-            <tr>
-              <th className="px-6 py-3 w-[200px]">Worker</th>
-              <th className="px-6 py-3 w-[200px]">Title</th>
-              <th className="px-6 py-3 w-[120px]">ID#</th>
-              <th className="px-6 py-3 w-[160px]">Location</th>
-              <th className="px-6 py-3 w-[240px]">Services</th>
-              <th className="px-6 py-3 w-[120px]">Status</th>
-              <th className="px-6 py-3 text-center w-[140px]">Actions</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {filteredData?.length > 0 ? (
-              filteredData?.map((worker) => (
-                <tr
-                  key={worker._id}
-                  className="hover:bg-pink-50 border-b border-pink-100 transition-all"
+      <Table
+        columns={columns}
+        dataSource={filteredData}
+        rowKey="_id"
+        loading={isLoading}
+        scroll={{ x: 900 }}
+        pagination={{
+          current: currentPage,
+          pageSize: limit,
+          total: pagination?.total,
+          position: ["bottomCenter"],
+          onChange: (page) => setCurrentPage(page),
+          showSizeChanger: false,
+          itemRender: (page, type, originalElement) => {
+            if (type === "prev") {
+              return (
+                <Button className="bg-pink-500 text-white border-none">
+                  Previous
+                </Button>
+              );
+            }
+            if (type === "next") {
+              return (
+                <Button className="bg-pink-500 text-white border-none">
+                  Next
+                </Button>
+              );
+            }
+            if (type === "page") {
+              return (
+                <Button
+                  className={
+                    currentPage === page
+                      ? "bg-pink-500 text-white border-none"
+                      : "bg-white text-pink-500 border-pink-500"
+                  }
                 >
-                  {/* Avatar + Name */}
-                  <td className="px-6 py-3 flex items-center gap-3 w-[200px] shrink-0">
-                    <img
-                      src={`${import.meta.env.VITE_REACT_APP_BASE_URL}${worker?.uploadPhoto}`}
-                      alt={worker?.firstName}
-                      className="w-9 h-9 rounded-full object-cover"
-                    />
-                    <span
-                      className="text-[#e91e63] font-medium cursor-pointer hover:underline"
-                      onClick={() => handleViewWorker(worker)}
-                    >
-                      {worker?.firstName + " " + worker?.lastName}
-                    </span>
-                  </td>
+                  {page}
+                </Button>
+              );
+            }
+            return originalElement;
+          },
+        }}
+        rowClassName="border-b border-pink-100 hover:bg-pink-50 transition-all"
+      />
 
-                  <td className="px-6 py-3 w-[120px]">
-                    {worker?.title || "Title"}
-                  </td>
-                  <td className="px-6 py-3 w-[120px]">{worker?.workerId}</td>
-                  <td className="px-6 py-3 w-[160px]">{worker?.address}</td>
-                  <td className="px-6 py-3 w-[240px]">
-                    {worker?.services?.map((service) => (
-                      <ul key={service?._id}>
-                        <li>{service?.service?.serviceName}</li>
-                      </ul>
-                    ))}
-                  </td>
-                  <td className="px-6 py-3 w-[120px]">
-                    <span
-                      className={`${
-                        worker?.isBlocked
-                          ? "bg-red-200 text-red-600 text-xs px-3 py-1 rounded-full"
-                          : "bg-green-100 text-green-700 text-xs px-3 py-1 rounded-full"
-                      }`}
-                    >
-                      {worker?.isBlocked ? "Blocked" : "Active"}
-                    </span>
-                  </td>
-
-                  {/* Actions */}
-                  <td className="px-6 py-3 text-right flex justify-center gap-3 text-[#e91e63]">
-                    <EyeOutlined
-                      className="cursor-pointer hover:text-pink-500 text-lg"
-                      onClick={() => handleViewWorker(worker)}
-                    />
-                    <EditOutlined
-                      className="cursor-pointer hover:text-pink-500 text-lg"
-                      onClick={() => handleEditWorker(worker)}
-                    />
-                    <Popconfirm
-                      title="Are you sure you want to delete this worker?"
-                      onConfirm={() => handleDeleteWorker(worker._id)} // Call delete function on confirmation
-                      okText="Yes"
-                      cancelText="No"
-                    >
-                      <DeleteOutlined className="cursor-pointer hover:text-pink-500 text-lg" />
-                    </Popconfirm>
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td
-                  colSpan="7"
-                  className="text-center py-6 text-gray-500 text-sm"
-                >
-                  {isLoading ? (
-                    <div className="flex items-center justify-center text-center">
-                      <ScaleLoader color="#ff0db4" />
-                    </div>
-                  ) : (
-                    "No Worker found"
-                  )}
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Pagination */}
-      <div className="flex justify-center items-center space-x-4 py-4">
-        <Button
-          onClick={handlePreviousPage}
-          disabled={currentPage === 1}
-          className="bg-pink-500 text-white"
-        >
-          Previous
-        </Button>
-
-        {/* Dynamic page number buttons */}
-        <div className="flex space-x-2">{renderPageButtons()}</div>
-
-        <Button
-          onClick={handleNextPage}
-          disabled={currentPage === pagination?.totalPages}
-          className="bg-pink-500 text-white"
-        >
-          Next
-        </Button>
-      </div>
-
-      {/* Details Modal */}
       <UserDetailsModal
         isOpen={openModal}
         onClose={() => setOpenModal(false)}
         user={detailsData}
       />
-
-      {/* Update Modal */}
       <UpdateWorkerModal
         isOpen={openUpdateModal}
         onClose={() => setOpenUpdateModal(false)}

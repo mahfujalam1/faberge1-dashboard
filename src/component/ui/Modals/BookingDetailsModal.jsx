@@ -4,27 +4,28 @@ import React from "react";
 const BookingDetailsModal = ({ isOpen, booking, onClose }) => {
   if (!isOpen || !booking) return null;
 
-  // Calculate total price
-  const calculateTotal = () => {
+  // Prefer the breakdown captured at booking time; fall back to recomputed line totals
+  // for legacy bookings that pre-date the breakdown field.
+  const computeLineSubtotal = () => {
     if (!booking.services || booking.services.length === 0) return 0;
-
     let total = 0;
     booking.services.forEach((serviceItem) => {
-      // Add main service price
       total += serviceItem.service?.price || 0;
-
-      // Add subcategories prices
-      if (serviceItem.subcategories && serviceItem.subcategories.length > 0) {
+      if (serviceItem.subcategories?.length > 0) {
         serviceItem.subcategories.forEach((sub) => {
           total += sub.subcategoryPrice || 0;
         });
       }
     });
-
     return total;
   };
 
-  const totalPrice = calculateTotal();
+  const breakdown = booking.priceBreakdown || {};
+  const subtotal = breakdown.subtotal ?? computeLineSubtotal();
+  const agencyFee = breakdown.agencyFee ?? 0;
+  const total = breakdown.total ?? booking.paymentAmount ?? subtotal;
+  const workerEarnings = booking.workerEarnings ?? subtotal;
+  const adminEarnings = booking.adminEarnings ?? agencyFee;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[9999] px-4">
@@ -90,12 +91,30 @@ const BookingDetailsModal = ({ isOpen, booking, onClose }) => {
             </React.Fragment>
           ))}
 
-          {/* Total */}
-          <div className="flex justify-between mt-4 pt-3 border-t-2 border-pink-200">
-            <span className="font-bold text-base">Total</span>
-            <span className="font-bold text-base text-[#e91e63]">
-              ${totalPrice}
-            </span>
+          {/* Financial breakdown (admin/manager view) */}
+          <div className="mt-4 pt-3 border-t-2 border-pink-200 space-y-1">
+            <div className="flex justify-between">
+              <span className="text-gray-700">Service subtotal</span>
+              <span>${Number(subtotal).toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-700">Agency fee</span>
+              <span>${Number(agencyFee).toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between pt-2 border-t border-pink-100">
+              <span className="font-bold text-base">Total paid</span>
+              <span className="font-bold text-base text-[#e91e63]">
+                ${Number(total).toFixed(2)}
+              </span>
+            </div>
+            <div className="flex justify-between pt-2 text-xs text-gray-500">
+              <span>Worker earnings</span>
+              <span>${Number(workerEarnings).toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between text-xs text-gray-500">
+              <span>Admin earnings (agency fee)</span>
+              <span>${Number(adminEarnings).toFixed(2)}</span>
+            </div>
           </div>
 
           {/* Status */}

@@ -56,6 +56,31 @@ const generateYAxisTicks = (maxValue) => {
   return [0, step, step * 2, step * 3, maxValue];
 };
 
+// Given a category-axis chart, pick an inner pixel width so each bar/label has
+// enough room (otherwise long labels like "Braids - Straight Box" collide).
+// Caller wraps this in overflow-x-auto so the chart scrolls when needed.
+const PIXELS_PER_BAR = 110;
+const MIN_CHART_WIDTH = 600;
+const computeChartMinWidth = (count) =>
+  Math.max(count * PIXELS_PER_BAR, MIN_CHART_WIDTH);
+
+// Custom XAxis tick: rotate -35° and right-align so long labels fit horizontally.
+const RotatedXAxisTick = ({ x, y, payload }) => (
+  <g transform={`translate(${x},${y})`}>
+    <text
+      x={0}
+      y={0}
+      dy={12}
+      textAnchor="end"
+      fill="#555"
+      fontSize={12}
+      transform="rotate(-35)"
+    >
+      {payload.value}
+    </text>
+  </g>
+);
+
 const Analytics = () => {
   const [activeKey, setActiveKey] = useState("1");
   const [selectedMonth, setSelectedMonth] = useState(defaultMonth);
@@ -160,11 +185,11 @@ const Analytics = () => {
       children: (
         <div className="bg-white shadow-sm rounded-xl p-4 md:p-6 w-full mt-3">
           <div className="overflow-x-auto" style={{ width: "100%" }}>
-            <div style={{ minWidth: "280px" }}>
-              <ResponsiveContainer width="100%" height={380}>
+            <div style={{ minWidth: computeChartMinWidth(serviceData.length) }}>
+              <ResponsiveContainer width="100%" height={420}>
                 <BarChart
                   data={serviceData}
-                  margin={{ top: 10, right: 30, left: 0, bottom: 10 }}
+                  margin={{ top: 10, right: 30, left: 0, bottom: 70 }}
                   barCategoryGap="15%"
                   barGap={10}
                 >
@@ -173,7 +198,8 @@ const Analytics = () => {
                     dataKey="serviceName"
                     stroke="#555"
                     interval={0}
-                    tickMargin={10}
+                    height={80}
+                    tick={<RotatedXAxisTick />}
                   />
                   <YAxis
                     ticks={serviceTicks}
@@ -202,27 +228,42 @@ const Analytics = () => {
       label: "Worker Popularity",
       children: (
         <div className="bg-white shadow-sm rounded-xl p-4 md:p-6 w-full mt-3">
-          <ResponsiveContainer width="100%" height={380}>
-            <BarChart data={workerData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#f3d2db" />
-              <XAxis dataKey="workerName" stroke="#555" />
-              <YAxis
-                ticks={workerTicks}
-                domain={[0, workerYMax]}
-                tick={{ fill: "#666", fontSize: 12 }}
-                axisLine={false}
-                tickLine={false}
-                tickFormatter={(val) => (val === workerYMax ? "Ꝏ" : val)}
-              />
-              <Tooltip />
-              <Bar
-                dataKey="value"
-                fill="#e91e63"
-                barSize={35}
-                radius={[6, 6, 0, 0]}
-              />
-            </BarChart>
-          </ResponsiveContainer>
+          <div className="overflow-x-auto" style={{ width: "100%" }}>
+            <div style={{ minWidth: computeChartMinWidth(workerData.length) }}>
+              <ResponsiveContainer width="100%" height={420}>
+                <BarChart
+                  data={workerData}
+                  margin={{ top: 10, right: 30, left: 0, bottom: 70 }}
+                  barCategoryGap="15%"
+                  barGap={10}
+                >
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f3d2db" />
+                  <XAxis
+                    dataKey="workerName"
+                    stroke="#555"
+                    interval={0}
+                    height={80}
+                    tick={<RotatedXAxisTick />}
+                  />
+                  <YAxis
+                    ticks={workerTicks}
+                    domain={[0, workerYMax]}
+                    tick={{ fill: "#666", fontSize: 12 }}
+                    axisLine={false}
+                    tickLine={false}
+                    tickFormatter={(val) => (val === workerYMax ? "Ꝏ" : val)}
+                  />
+                  <Tooltip />
+                  <Bar
+                    dataKey="value"
+                    fill="#e91e63"
+                    barSize={35}
+                    radius={[6, 6, 0, 0]}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
         </div>
       ),
     },

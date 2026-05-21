@@ -1,11 +1,13 @@
 import { useRef, useState, useEffect } from "react";
-import { Modal } from "antd";
+import { Modal, Select, Table } from "antd";
 import {
   UploadOutlined,
+  DeleteOutlined,
   EyeInvisibleOutlined,
   EyeTwoTone,
 } from "@ant-design/icons";
 import { useUpdateWorkerMutation } from "../../../redux/features/worker/worker";
+import { useGetAllServicesQuery } from "../../../redux/features/service/service";
 import { toast } from "sonner";
 
 const UpdateWorkerModal = ({ isOpen, onClose, workerData }) => {
@@ -13,6 +15,9 @@ const UpdateWorkerModal = ({ isOpen, onClose, workerData }) => {
   const [imagePreview, setImagePreview] = useState(null);
   const [imageFile, setImageFile] = useState(null);
   const [updateWorker, { isLoading }] = useUpdateWorkerMutation();
+  const { data: servicesResp } = useGetAllServicesQuery({});
+  const allServices = servicesResp?.data;
+
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
@@ -27,6 +32,11 @@ const UpdateWorkerModal = ({ isOpen, onClose, workerData }) => {
     password: "",
     confirmPassword: "",
   });
+
+  // Mirrors CreateWorkerModal: selectedServices is an array of serviceName strings,
+  // selectedSubServices is a map of serviceName -> array of subcategoryName strings.
+  const [selectedServices, setSelectedServices] = useState([]);
+  const [selectedSubServices, setSelectedSubServices] = useState({});
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -64,6 +74,66 @@ const UpdateWorkerModal = ({ isOpen, onClose, workerData }) => {
       setPasswordError("");
     }
   }, [workerData, isOpen]);
+
+  // Pre-populate selected services + sub-services once both workerData and the
+  // services catalog are available. We need the catalog to translate ObjectIds
+  // (worker.services[].service / subcategories) into serviceName / subcategoryName,
+  // which is the shape CreateWorkerModal already standardized on.
+  useEffect(() => {
+    if (!isOpen || !workerData || !allServices) return;
+    if (!Array.isArray(workerData.services)) {
+      setSelectedServices([]);
+      setSelectedSubServices({});
+      return;
+    }
+
+    const names = [];
+    const subMap = {};
+
+    workerData.services.forEach((entry) => {
+      // entry.service may be a populated doc OR a bare ObjectId string.
+      const serviceId =
+        typeof entry.service === "object" && entry.service !== null
+          ? entry.service._id
+          : entry.service;
+
+      const serviceDoc = allServices.find(
+        (s) => s._id?.toString() === String(serviceId)
+      );
+      if (!serviceDoc) return;
+
+      names.push(serviceDoc.serviceName);
+
+      const subIds = (entry.subcategories || []).map((s) =>
+        typeof s === "object" && s !== null ? s._id : s
+      );
+      const subNames = (serviceDoc.subcategory || [])
+        .filter((sub) => subIds.some((id) => String(id) === String(sub._id)))
+        .map((sub) => sub.subcategoryName);
+
+      if (subNames.length > 0) subMap[serviceDoc.serviceName] = subNames;
+    });
+
+    setSelectedServices(names);
+    setSelectedSubServices(subMap);
+  }, [workerData, allServices, isOpen]);
+
+  const handleSelectMainService = (value) => {
+    if (!selectedServices.includes(value)) {
+      setSelectedServices([...selectedServices, value]);
+    }
+  };
+
+  const handleSelectSubService = (mainName, value) => {
+    setSelectedSubServices((prev) => ({ ...prev, [mainName]: value }));
+  };
+
+  const handleDeleteService = (name) => {
+    setSelectedServices(selectedServices.filter((s) => s !== name));
+    const newSub = { ...selectedSubServices };
+    delete newSub[name];
+    setSelectedSubServices(newSub);
+  };
 
   // Handle input changes
   const handleChange = (e) => {
@@ -146,6 +216,31 @@ const UpdateWorkerModal = ({ isOpen, onClose, workerData }) => {
     if (imageFile) {
       postData.append("workerProfileImage", imageFile);
     }
+
+    // Translate selectedServices/selectedSubServices (name-based) back into
+    // the ObjectId payload the backend expects: [{ service, subcategories }].
+    const servicesArray = selectedServices
+      .map((srv) => {
+        const found = allServices?.find((s) => s.serviceName === srv);
+        if (!found) return null;
+        return {
+          service: found._id,
+          subcategories:
+            found?.subcategory?.length > 0
+              ? (selectedSubServices[srv] || [])
+                  .map((subName) => {
+                    const subDoc = found.subcategory.find(
+                      (ss) => ss.subcategoryName === subName
+                    );
+                    return subDoc?._id;
+                  })
+                  .filter(Boolean)
+              : [],
+        };
+      })
+      .filter(Boolean);
+
+    postData.append("services", JSON.stringify(servicesArray));
 
     console.log("👷 Worker Updated - FormData prepared");
 
@@ -286,6 +381,104 @@ const UpdateWorkerModal = ({ isOpen, onClose, workerData }) => {
         {passwordError && (
           <div className="col-span-2 bg-red-50 border border-red-200 text-red-600 px-4 py-2 rounded-lg text-sm">
             {passwordError}
+          </div>
+        )}
+
+        {/* Main Services */}
+        <div className="col-span-2 mt-3">
+          <label className="font-medium text-gray-700 mb-2 block">
+            Select Main Services
+          </label>
+          <Select
+            placeholder="Select a service"
+            style={{ width: "100%" }}
+            value={undefined}
+            onSelect={handleSelectMainService}
+            options={allServices
+              ?.filter((s) => !selectedServices.includes(s.serviceName))
+              .map((s) => ({
+                label: s.serviceName,
+                value: s.serviceName,
+              }))}
+          />
+        </div>
+
+        {/* Selected Services */}
+        {selectedServices.length > 0 && (
+          <div className="col-span-2 mt-6 bg-pink-50 border border-pink-100 rounded-lg p-4">
+            <h3 className="text-md font-semibold text-[#e91e63] mb-3">
+              Selected Services
+            </h3>
+
+            {selectedServices?.map((srv) => {
+              const service = allServices?.find((s) => s.serviceName === srv);
+              const hasSub = service?.subcategory?.length > 0;
+
+              return (
+                <div
+                  key={srv}
+                  className="bg-white border border-pink-100 rounded-lg mb-4 p-4"
+                >
+                  <div className="flex justify-between items-center mb-2">
+                    <h4 className="font-semibold text-gray-800">
+                      {srv} —{" "}
+                      <span className="text-gray-500">${service?.price}</span>
+                    </h4>
+                    <DeleteOutlined
+                      onClick={() => handleDeleteService(srv)}
+                      className="text-red-500 cursor-pointer hover:text-red-700"
+                    />
+                  </div>
+
+                  {hasSub ? (
+                    <>
+                      <p className="text-sm text-gray-600 mb-2">
+                        Select Extra Services:
+                      </p>
+                      <Select
+                        mode="multiple"
+                        style={{ width: "100%" }}
+                        placeholder="Select sub-services"
+                        value={selectedSubServices[srv] || []}
+                        onChange={(v) => handleSelectSubService(srv, v)}
+                        options={service?.subcategory?.map((ss) => ({
+                          label: `${ss.subcategoryName} ($${ss.subcategoryPrice})`,
+                          value: ss.subcategoryName,
+                        }))}
+                      />
+
+                      {selectedSubServices[srv]?.length > 0 && (
+                        <Table
+                          className="mt-3"
+                          dataSource={service?.subcategory
+                            .filter((ss) =>
+                              selectedSubServices[srv]?.includes(
+                                ss.subcategoryName
+                              )
+                            )
+                            .map((ss, i) => ({
+                              key: i,
+                              name: ss.subcategoryName,
+                              price: `$${ss.subcategoryPrice}`,
+                            }))}
+                          pagination={false}
+                          size="small"
+                          bordered
+                          columns={[
+                            { title: "Sub Service", dataIndex: "name" },
+                            { title: "Price", dataIndex: "price" },
+                          ]}
+                        />
+                      )}
+                    </>
+                  ) : (
+                    <p className="text-sm text-gray-600 italic">
+                      No sub-services (Base price ${service?.price})
+                    </p>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
 

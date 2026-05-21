@@ -2,16 +2,20 @@ import { useState, useEffect } from "react";
 import { Modal } from "antd";
 import { useUpdateServiceMutation } from "../../../redux/features/service/service";
 import { toast } from "sonner";
+import { getDurationOptions } from "../../../utils/duration";
 
 const UpdateServiceModal = ({ isOpen, service, onClose }) => {
   const [formData, setFormData] = useState({
     serviceName: "",
     price: "",
+    agencyFee: 0,
+    serviceDuration: 60,
     subcategory: [],
   });
 
   const [updateService] = useUpdateServiceMutation();
   const serviceId = service?._id;
+  const durationOptions = getDurationOptions();
 
   // 🔹 When service data comes in, load it into form
   useEffect(() => {
@@ -19,6 +23,8 @@ const UpdateServiceModal = ({ isOpen, service, onClose }) => {
       setFormData({
         serviceName: service.serviceName || "",
         price: service.price || 0,
+        agencyFee: service.agencyFee ?? 0,
+        serviceDuration: service.serviceDuration ?? 60,
         subcategory: service.subcategory ? [...service.subcategory] : [],
       });
     }
@@ -71,9 +77,16 @@ const UpdateServiceModal = ({ isOpen, service, onClose }) => {
     e.preventDefault();
 
     try {
+      const duration = Number(formData.serviceDuration);
+      if (!duration || duration < 30 || duration > 480 || duration % 30 !== 0) {
+        toast.error("Please select a valid service duration");
+        return;
+      }
       const updatedData = {
         serviceName: formData.serviceName.trim(),
         price: parseFloat(formData.price),
+        agencyFee: Number(formData.agencyFee) || 0,
+        serviceDuration: duration,
         subcategory: formData.subcategory.filter(
           (sub) =>
             sub.subcategoryName.trim() !== "" &&
@@ -122,19 +135,60 @@ const UpdateServiceModal = ({ isOpen, service, onClose }) => {
           />
         </div>
 
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Price ($)
+            </label>
+            <input
+              type="number"
+              name="price"
+              min={0}
+              step="0.01"
+              value={formData.price}
+              onChange={handleMainChange}
+              placeholder="Enter Price"
+              className="w-full border border-pink-100 rounded-md px-3 py-2 focus:border-[#e91e63] focus:outline-none"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Agency Fee ($)
+            </label>
+            <input
+              type="number"
+              name="agencyFee"
+              min={0}
+              step="0.01"
+              value={formData.agencyFee}
+              onChange={handleMainChange}
+              placeholder="Enter Agency Fee"
+              className="w-full border border-pink-100 rounded-md px-3 py-2 focus:border-[#e91e63] focus:outline-none"
+            />
+          </div>
+        </div>
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Price ($)
+            Service Duration
           </label>
-          <input
-            type="number"
-            name="price"
-            value={formData.price}
+          <select
+            name="serviceDuration"
+            value={formData.serviceDuration}
             onChange={handleMainChange}
-            placeholder="Enter Price"
-            className="w-full border border-pink-100 rounded-md px-3 py-2 focus:border-[#e91e63] focus:outline-none"
+            className="w-full border border-pink-100 rounded-md px-3 py-2 focus:border-[#e91e63] focus:outline-none bg-white"
             required
-          />
+          >
+            {durationOptions.map((opt) => (
+              <option key={opt.value} value={opt.value}>
+                {opt.label}
+              </option>
+            ))}
+          </select>
+          <p className="text-xs text-gray-500 mt-1">
+            30-minute increments, 30 minutes up to 8 hours.
+          </p>
         </div>
 
         {/* 🔹 Sub-Services (If Exist) */}

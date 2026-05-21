@@ -2,20 +2,25 @@ import React, { useState } from "react";
 import { Modal } from "antd";
 import { useAddServiceMutation } from "../../../redux/features/service/service";
 import { toast } from "sonner";
+import { getDurationOptions } from "../../../utils/duration";
 
 const AddServiceModal = ({ isOpen, onClose }) => {
   const [service, setService] = useState({
     serviceName: "",
     price: 0,
+    agencyFee: 0,
+    serviceDuration: 60,
     subcategory: [],
   });
   const [addService] = useAddServiceMutation();
+  const durationOptions = getDurationOptions();
 
   // 🔹 Handle main service input
   const handleMainChange = (e) => {
     const { name, value } = e.target;
 
-    const updatedValue = name === "price" ? parseFloat(value) : value;
+    const numericFields = ["price", "agencyFee", "serviceDuration"];
+    const updatedValue = numericFields.includes(name) ? parseFloat(value) : value;
 
     setService((prev) => ({ ...prev, [name]: updatedValue }));
   };
@@ -55,9 +60,20 @@ const AddServiceModal = ({ isOpen, onClose }) => {
   const handleCreate = async () => {
     try {
       if (!service.serviceName || isNaN(service.price)) return;
+      if (
+        !service.serviceDuration ||
+        service.serviceDuration < 30 ||
+        service.serviceDuration > 480
+      ) {
+        toast.error("Please select a valid service duration");
+        return;
+      }
 
       const newService = {
         ...service,
+        price: Number(service.price) || 0,
+        agencyFee: Number(service.agencyFee) || 0,
+        serviceDuration: Number(service.serviceDuration),
         subcategory: service.subcategory.filter(
           (s) => s.subcategoryName.trim() && !isNaN(s.subcategoryPrice)
         ),
@@ -69,11 +85,23 @@ const AddServiceModal = ({ isOpen, onClose }) => {
       onClose();
 
       // Reset after submit
-      setService({ serviceName: "", price: 0, subcategory: [] });
+      setService({
+        serviceName: "",
+        price: 0,
+        agencyFee: 0,
+        serviceDuration: 60,
+        subcategory: [],
+      });
     } catch (err) {
-      setService({ serviceName: "", price: 0, subcategory: [] });
+      setService({
+        serviceName: "",
+        price: 0,
+        agencyFee: 0,
+        serviceDuration: 60,
+        subcategory: [],
+      });
       console.log(err);
-      toast.error(err);
+      toast.error(err?.data?.message || "Failed to create service");
     }
   };
 
@@ -100,8 +128,8 @@ const AddServiceModal = ({ isOpen, onClose }) => {
             </label>
             <input
               type="text"
-              name="serviceName" // Change name attribute to match state property
-              value={service.serviceName} // Reference serviceName in value
+              name="serviceName"
+              value={service.serviceName}
               onChange={handleMainChange}
               className="border border-pink-100 rounded-md px-3 py-2 w-full focus:border-[#e91e63] focus:outline-none"
               placeholder="Enter Service Name"
@@ -112,11 +140,51 @@ const AddServiceModal = ({ isOpen, onClose }) => {
             <input
               type="number"
               name="price"
-              value={service.price || Number}
+              min={0}
+              step="0.01"
+              value={service.price}
               onChange={handleMainChange}
               className="border border-pink-100 rounded-md px-3 py-2 w-full focus:border-[#e91e63] focus:outline-none"
               placeholder="Enter Price"
             />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Agency Fee ($)
+            </label>
+            <input
+              type="number"
+              name="agencyFee"
+              min={0}
+              step="0.01"
+              value={service.agencyFee}
+              onChange={handleMainChange}
+              className="border border-pink-100 rounded-md px-3 py-2 w-full focus:border-[#e91e63] focus:outline-none"
+              placeholder="Enter Agency Fee"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Charged on top of service price; goes to admin.
+            </p>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Service Duration
+            </label>
+            <select
+              name="serviceDuration"
+              value={service.serviceDuration}
+              onChange={handleMainChange}
+              className="border border-pink-100 rounded-md px-3 py-2 w-full focus:border-[#e91e63] focus:outline-none bg-white"
+            >
+              {durationOptions.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-gray-500 mt-1">
+              30-minute increments, 30 minutes to 8 hours.
+            </p>
           </div>
         </div>
 

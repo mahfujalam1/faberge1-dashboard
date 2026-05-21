@@ -11,6 +11,7 @@ import {
 } from "../../redux/features/service/service";
 import { toast } from "sonner";
 import UpdateServiceTimeModal from "../../component/ui/Modals/UpdateServiceTimeModal";
+import { formatDuration } from "../../utils/duration";
 
 const ServicePage = () => {
   const [showAddModal, setShowAddModal] = useState(false);
@@ -91,6 +92,8 @@ const ServicePage = () => {
             <tr>
               <th className="px-6 py-3">Service Name</th>
               <th className="px-6 py-3">Price ($)</th>
+              <th className="px-6 py-3">Agency Fee ($)</th>
+              <th className="px-6 py-3">Duration</th>
               <th className="px-6 py-3">Add-Ons</th>
               <th className="px-6 py-3 text-right">Actions</th>
             </tr>
@@ -109,6 +112,10 @@ const ServicePage = () => {
                       </div>
                     </td>
                     <td className="px-6 py-3">${service.price}</td>
+                    <td className="px-6 py-3">${service.agencyFee ?? 0}</td>
+                    <td className="px-6 py-3">
+                      {formatDuration(service.serviceDuration ?? 60)}
+                    </td>
                     <td className="px-6 py-3">
                       {service.subcategory?.length > 0 && (
                         <ul className="text-xs text-gray-500 mt-1 list-disc ml-5">
@@ -150,7 +157,7 @@ const ServicePage = () => {
           ) : (
             <tbody>
               <tr>
-                <td colSpan="4" className="px-6 py-3">
+                <td colSpan="6" className="px-6 py-3">
                   <Skeleton active paragraph={{ rows: 1 }} />
                 </td>
               </tr>

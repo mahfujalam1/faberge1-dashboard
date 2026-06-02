@@ -7,10 +7,15 @@ import ConfirmationModal from "../../ui/Modals/ConfirmationModal";
 import CreateWorkerModal from "../../ui/Modals/CreateWorkerModal";
 import { allServices } from "../../../constants/service";
 import WorkerTable from "./workerTable";
+import { useGetSingleManagerQuery } from "../../../redux/features/dashboard/dashboardApi";
 
 const UserManagement = () => {
   const [activeTab, setActiveTab] = useState("worker");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+
+  // Only admins may create/edit worker profiles (incl. profile photo).
+  const { data: currentUser } = useGetSingleManagerQuery();
+  const isAdmin = currentUser?.role === "admin";
 
   // services -> string for table
   const generateServiceString = (selectedServices = []) =>
@@ -56,7 +61,7 @@ const UserManagement = () => {
           </button>
         </div>
 
-        {activeTab === "worker" && (
+        {activeTab === "worker" && isAdmin && (
           <Button
             type="primary"
             icon={<PlusOutlined />}

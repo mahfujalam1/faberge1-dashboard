@@ -14,8 +14,12 @@ import UserDetailsModal from "../../ui/Modals/UserDetailsModal";
 import { ScaleLoader } from "react-spinners";
 import { toast } from "sonner";
 import UpdateWorkerModal from "../../ui/Modals/UpdateWorkerModal";
+import { useGetSingleManagerQuery } from "../../../redux/features/dashboard/dashboardApi";
 
 const WorkerTable = () => {
+  // Only admins may edit worker profiles (incl. profile photo).
+  const { data: currentUser } = useGetSingleManagerQuery();
+  const isAdmin = currentUser?.role === "admin";
   const [searchValue, setSearchValue] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [openModal, setOpenModal] = useState(false);
@@ -129,10 +133,12 @@ const WorkerTable = () => {
             className="cursor-pointer hover:text-pink-500 text-lg"
             onClick={() => handleViewWorker(worker)}
           />
-          <EditOutlined
-            className="cursor-pointer hover:text-pink-500 text-lg"
-            onClick={() => handleEditWorker(worker)}
-          />
+          {isAdmin && (
+            <EditOutlined
+              className="cursor-pointer hover:text-pink-500 text-lg"
+              onClick={() => handleEditWorker(worker)}
+            />
+          )}
           <Popconfirm
             title="Are you sure you want to delete this worker?"
             onConfirm={() => handleDeleteWorker(worker._id)}

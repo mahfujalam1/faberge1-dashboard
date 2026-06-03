@@ -10,10 +10,18 @@ import { useUpdateWorkerMutation } from "../../../redux/features/worker/worker";
 import { useGetAllServicesQuery } from "../../../redux/features/service/service";
 import { toast } from "sonner";
 
+const MAX_GALLERY_PHOTOS = 10;
+
 const UpdateWorkerModal = ({ isOpen, onClose, workerData }) => {
   const fileInputRef = useRef(null);
+  const galleryInputRef = useRef(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [imageFile, setImageFile] = useState(null);
+  // Gallery photos: existingPhotos are server paths kept from before, newGalleryFiles
+  // are freshly selected File objects (with object-URL previews).
+  const [existingPhotos, setExistingPhotos] = useState([]);
+  const [newGalleryFiles, setNewGalleryFiles] = useState([]);
+  const [newGalleryPreviews, setNewGalleryPreviews] = useState([]);
   const [updateWorker, { isLoading }] = useUpdateWorkerMutation();
   const { data: servicesResp } = useGetAllServicesQuery({});
   const allServices = servicesResp?.data;
@@ -68,8 +76,15 @@ const UpdateWorkerModal = ({ isOpen, onClose, workerData }) => {
         );
       }
 
-      // Reset image file and errors when modal opens
+      // Existing gallery photos (server paths)
+      setExistingPhotos(
+        Array.isArray(workerData.photos) ? workerData.photos : []
+      );
+
+      // Reset image file, new gallery selections and errors when modal opens
       setImageFile(null);
+      setNewGalleryFiles([]);
+      setNewGalleryPreviews([]);
       setImageError("");
       setPasswordError("");
     }
@@ -181,6 +196,44 @@ const UpdateWorkerModal = ({ isOpen, onClose, workerData }) => {
     }
   };
 
+  // Gallery photos (existing kept + new) capped at 10 total
+  const totalGalleryCount = existingPhotos.length + newGalleryFiles.length;
+
+  const handleGalleryChange = (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    const remaining = MAX_GALLERY_PHOTOS - totalGalleryCount;
+    if (remaining <= 0) {
+      toast.error(`You can have a maximum of ${MAX_GALLERY_PHOTOS} photos`);
+      e.target.value = "";
+      return;
+    }
+
+    const accepted = files.slice(0, remaining);
+    if (files.length > remaining) {
+      toast.error(
+        `Only ${remaining} more photo(s) can be added (max ${MAX_GALLERY_PHOTOS})`
+      );
+    }
+
+    setNewGalleryFiles((prev) => [...prev, ...accepted]);
+    setNewGalleryPreviews((prev) => [
+      ...prev,
+      ...accepted.map((f) => URL.createObjectURL(f)),
+    ]);
+    e.target.value = "";
+  };
+
+  const handleRemoveExistingPhoto = (index) => {
+    setExistingPhotos((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleRemoveNewPhoto = (index) => {
+    setNewGalleryFiles((prev) => prev.filter((_, i) => i !== index));
+    setNewGalleryPreviews((prev) => prev.filter((_, i) => i !== index));
+  };
+
   // Submit the form
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -216,6 +269,12 @@ const UpdateWorkerModal = ({ isOpen, onClose, workerData }) => {
     if (imageFile) {
       postData.append("workerProfileImage", imageFile);
     }
+
+    // Gallery: tell the backend which existing photos to keep, and upload new ones.
+    postData.append("existingPhotos", JSON.stringify(existingPhotos));
+    newGalleryFiles.forEach((file) => {
+      postData.append("workerPhotos", file);
+    });
 
     // Translate selectedServices/selectedSubServices (name-based) back into
     // the ObjectId payload the backend expects: [{ service, subcategories }].
@@ -317,6 +376,84 @@ const UpdateWorkerModal = ({ isOpen, onClose, workerData }) => {
             <span>{imageError}</span>
           </div>
         )}
+
+        {/* Gallery Photos (max 10) */}
+        <div className="col-span-2">
+          <div className="flex items-center justify-between mb-2">
+            <label className="font-medium text-gray-700">
+              Gallery Photos (shown on website)
+            </label>
+            <span className="text-xs text-gray-500">
+              {totalGalleryCount}/{MAX_GALLERY_PHOTOS}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
+            {/* Existing photos already saved on the server */}
+            {existingPhotos.map((path, idx) => (
+              <div
+                key={`existing-${path}`}
+                className="relative w-full aspect-square rounded-md overflow-hidden border border-pink-100 group"
+              >
+                <img
+                  src={`${import.meta.env.VITE_REACT_APP_BASE_URL}${path}`}
+                  alt={`gallery-${idx}`}
+                  className="w-full h-full object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleRemoveExistingPhoto(idx)}
+                  className="absolute top-1 right-1 bg-black/50 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition"
+                  aria-label="Remove photo"
+                >
+                  <DeleteOutlined />
+                </button>
+              </div>
+            ))}
+
+            {/* Newly selected photos (not yet uploaded) */}
+            {newGalleryPreviews.map((src, idx) => (
+              <div
+                key={`new-${src}`}
+                className="relative w-full aspect-square rounded-md overflow-hidden border border-pink-100 group"
+              >
+                <img
+                  src={src}
+                  alt={`new-gallery-${idx}`}
+                  className="w-full h-full object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleRemoveNewPhoto(idx)}
+                  className="absolute top-1 right-1 bg-black/50 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition"
+                  aria-label="Remove photo"
+                >
+                  <DeleteOutlined />
+                </button>
+              </div>
+            ))}
+
+            {totalGalleryCount < MAX_GALLERY_PHOTOS && (
+              <button
+                type="button"
+                onClick={() => galleryInputRef.current.click()}
+                className="w-full aspect-square rounded-md border border-dashed border-pink-200 flex flex-col items-center justify-center text-[#e91e63] hover:bg-pink-50 transition cursor-pointer"
+              >
+                <UploadOutlined className="text-xl" />
+                <span className="text-[10px] mt-1">Add</span>
+              </button>
+            )}
+          </div>
+
+          <input
+            type="file"
+            ref={galleryInputRef}
+            accept="image/*"
+            multiple
+            onChange={handleGalleryChange}
+            className="hidden"
+          />
+        </div>
 
         {/* Basic Info */}
         {Object.keys(formData).map((key) => {

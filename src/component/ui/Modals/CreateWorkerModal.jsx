@@ -10,10 +10,16 @@ import { useGetAllServicesQuery } from "../../../redux/features/service/service"
 import { useCreateWorkerMutation } from "../../../redux/features/worker/worker";
 import { toast } from "sonner";
 
+const MAX_GALLERY_PHOTOS = 10;
+
 const CreateWorkerModal = ({ isOpen, onClose }) => {
   const fileInputRef = useRef(null);
+  const galleryInputRef = useRef(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [imageFile, setImageFile] = useState(null);
+  // Gallery photos (max 10) shown on the public website.
+  const [galleryFiles, setGalleryFiles] = useState([]);
+  const [galleryPreviews, setGalleryPreviews] = useState([]);
   const { data } = useGetAllServicesQuery({});
   const [createWorker, { isLoading }] = useCreateWorkerMutation();
   const allServices = data?.data;
@@ -57,6 +63,38 @@ const CreateWorkerModal = ({ isOpen, onClose }) => {
       setImageFile(file);
       setImagePreview(URL.createObjectURL(file));
     }
+  };
+
+  // 🔹 Handle gallery photos (max 10)
+  const handleGalleryChange = (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    const remaining = MAX_GALLERY_PHOTOS - galleryFiles.length;
+    if (remaining <= 0) {
+      toast.error(`You can upload a maximum of ${MAX_GALLERY_PHOTOS} photos`);
+      e.target.value = "";
+      return;
+    }
+
+    const accepted = files.slice(0, remaining);
+    if (files.length > remaining) {
+      toast.error(
+        `Only ${remaining} more photo(s) can be added (max ${MAX_GALLERY_PHOTOS})`
+      );
+    }
+
+    setGalleryFiles((prev) => [...prev, ...accepted]);
+    setGalleryPreviews((prev) => [
+      ...prev,
+      ...accepted.map((f) => URL.createObjectURL(f)),
+    ]);
+    e.target.value = ""; // allow re-selecting the same file
+  };
+
+  const handleRemoveGalleryPhoto = (index) => {
+    setGalleryFiles((prev) => prev.filter((_, i) => i !== index));
+    setGalleryPreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
   // 🔹 Select main service
@@ -110,6 +148,11 @@ const CreateWorkerModal = ({ isOpen, onClose }) => {
       postData.append("workerProfileImage", imageFile);
     }
 
+    // Append gallery photos (max 10)
+    galleryFiles.forEach((file) => {
+      postData.append("workerPhotos", file);
+    });
+
     // Prepare services array
     const servicesArray = selectedServices.map((srv) => {
       const found = allServices?.find((s) => s.serviceName === srv);
@@ -152,6 +195,8 @@ const CreateWorkerModal = ({ isOpen, onClose }) => {
       });
       setImagePreview(null);
       setImageFile(null);
+      setGalleryFiles([]);
+      setGalleryPreviews([]);
       setSelectedServices([]);
       setSelectedSubServices({});
       setPasswordError("");
@@ -203,6 +248,61 @@ const CreateWorkerModal = ({ isOpen, onClose }) => {
             ref={fileInputRef}
             accept="image/*"
             onChange={handleImageChange}
+            className="hidden"
+          />
+        </div>
+
+        {/* Gallery Photos (max 10) */}
+        <div className="col-span-2">
+          <div className="flex items-center justify-between mb-2">
+            <label className="font-medium text-gray-700">
+              Gallery Photos (shown on website)
+            </label>
+            <span className="text-xs text-gray-500">
+              {galleryFiles.length}/{MAX_GALLERY_PHOTOS}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
+            {galleryPreviews.map((src, idx) => (
+              <div
+                key={src}
+                className="relative w-full aspect-square rounded-md overflow-hidden border border-pink-100 group"
+              >
+                <img
+                  src={src}
+                  alt={`gallery-${idx}`}
+                  className="w-full h-full object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleRemoveGalleryPhoto(idx)}
+                  className="absolute top-1 right-1 bg-black/50 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition"
+                  aria-label="Remove photo"
+                >
+                  <DeleteOutlined />
+                </button>
+              </div>
+            ))}
+
+            {galleryFiles.length < MAX_GALLERY_PHOTOS && (
+              <button
+                type="button"
+                onClick={() => galleryInputRef.current.click()}
+                className="w-full aspect-square rounded-md border border-dashed border-pink-200 flex flex-col items-center justify-center text-[#e91e63] hover:bg-pink-50 transition cursor-pointer"
+              >
+                <UploadOutlined className="text-xl" />
+                <span className="text-[10px] mt-1">Add</span>
+              </button>
+            )}
+          </div>
+
+          <input
+            type="file"
+            ref={galleryInputRef}
+            accept="image/*"
+            multiple
+            onChange={handleGalleryChange}
             className="hidden"
           />
         </div>

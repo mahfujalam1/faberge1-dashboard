@@ -239,7 +239,7 @@ const CreateWorkerModal = ({ isOpen, onClose }) => {
             <>
               <UploadOutlined className="text-3xl text-[#e91e63]" />
               <p className="text-sm text-gray-600 mt-2">
-                Upload a professional photo
+                Upload HEADSHOT 
               </p>
             </>
           )}
@@ -256,7 +256,7 @@ const CreateWorkerModal = ({ isOpen, onClose }) => {
         <div className="col-span-2">
           <div className="flex items-center justify-between mb-2">
             <label className="font-medium text-gray-700">
-              Gallery Photos (shown on website)
+              Gallery Photos
             </label>
             <span className="text-xs text-gray-500">
               {galleryFiles.length}/{MAX_GALLERY_PHOTOS}

@@ -239,7 +239,7 @@ const CreateWorkerModal = ({ isOpen, onClose }) => {
             <>
               <UploadOutlined className="text-3xl text-[#e91e63]" />
               <p className="text-sm text-gray-600 mt-2">
-                Upload HEADSHOT 
+                Upload Headshot 
               </p>
             </>
           )}

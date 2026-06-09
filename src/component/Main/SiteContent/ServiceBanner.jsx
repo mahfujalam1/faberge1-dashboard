@@ -6,6 +6,14 @@ import {
   useGetDynamicBannerQuery,
 } from "../../../redux/features/site-content/site-content";
 
+// Display labels for the two banner slots. The underlying titles stay
+// "manicure"/"pedicure" so the website keeps matching them by title — only the
+// dashboard-facing wording changes to the generic "Banner 1"/"Banner 2".
+const BANNER_LABELS = {
+  manicure: "Banner 1",
+  pedicure: "Banner 2",
+};
+
 const ServiceBanner = ({ onClose }) => {
   const [createService, { isLoading }] = useCreateServiceMutation();
   const { data, refetch } = useGetDynamicBannerQuery();
@@ -194,7 +202,7 @@ const ServiceBanner = ({ onClose }) => {
       <>
         <MdOutlineCloudUpload className="text-3xl text-[#e91e63] mb-2" />
         <p className="text-sm text-gray-500">
-          Click to upload {type.charAt(0).toUpperCase() + type.slice(1)} banner
+          Click to upload {BANNER_LABELS[type]}
         </p>
         <p className="text-xs text-gray-400 mt-1">
           Supports: Images & Videos (Max 50MB)
@@ -206,12 +214,12 @@ const ServiceBanner = ({ onClose }) => {
   return (
     <div className="bg-white p-6 border border-pink-100 rounded-lg mb-4 shadow-sm space-y-6">
       <p className="text-gray-600 mb-3">
-        Upload separate banners for Manicure and Pedicure services.
+        Upload Banners
       </p>
 
-      {/* Manicure Banner */}
+      {/* Banner 1 */}
       <div>
-        <h3 className="font-medium text-gray-800 mb-2">Manicure Banner</h3>
+        <h3 className="font-medium text-gray-800 mb-2">Banner 1</h3>
 
         <div
           onClick={() => manicureRef.current.click()}
@@ -244,14 +252,14 @@ const ServiceBanner = ({ onClose }) => {
             disabled={isLoading || !manicureBanner}
             className="bg-[#e91e63] hover:bg-[#d81b60] text-white px-4 py-2 rounded-md shadow transition-all disabled:bg-gray-300 disabled:cursor-not-allowed"
           >
-            {isLoading ? "Uploading..." : "Upload Manicure Banner"}
+            {isLoading ? "Uploading..." : "Upload Banner 1"}
           </button>
         </div>
       </div>
 
-      {/* Pedicure Banner */}
+      {/* Banner 2 */}
       <div>
-        <h3 className="font-medium text-gray-800 mb-2">Pedicure Banner</h3>
+        <h3 className="font-medium text-gray-800 mb-2">Banner 2</h3>
 
         <div
           onClick={() => pedicureRef.current.click()}
@@ -284,7 +292,7 @@ const ServiceBanner = ({ onClose }) => {
             disabled={isLoading || !pedicureBanner}
             className="bg-[#e91e63] hover:bg-[#d81b60] text-white px-4 py-2 rounded-md shadow transition-all disabled:bg-gray-300 disabled:cursor-not-allowed"
           >
-            {isLoading ? "Uploading..." : "Upload Pedicure Banner"}
+            {isLoading ? "Uploading..." : "Upload Banner 2"}
           </button>
         </div>
       </div>

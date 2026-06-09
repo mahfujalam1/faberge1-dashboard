@@ -13,7 +13,7 @@ const Settings = () => {
   const settingsItem = [
     { title: "About us", path: "about-us" },
     { title: "Home Banner", path: "home-banner" },
-    { title: "Service Banner", path: "service-banner" },
+    { title: "Service Banners", path: "service-banner" },
   ];
 
   const handleNavigate = (value) => {

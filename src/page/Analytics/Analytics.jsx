@@ -47,11 +47,13 @@ const yearOptions = [
 const calculateYAxisMax = (data, dataKey) => {
   if (!data || data.length === 0) return 100;
   const maxValue = Math.max(...data.map((item) => item[dataKey] || 0));
-  return Math.ceil(maxValue * 1.3); // 30% more than highest value
+  if (maxValue === 0) return 10; // Avoid zero max which breaks the chart
+  return Math.ceil(maxValue * 1.3) || 10; // 30% more than highest value
 };
 
 // Helper function to generate Y-axis ticks
 const generateYAxisTicks = (maxValue) => {
+  if (maxValue <= 4) return Array.from({ length: maxValue + 1 }, (_, i) => i);
   const step = Math.ceil(maxValue / 4);
   return [0, step, step * 2, step * 3, maxValue];
 };
@@ -134,29 +136,29 @@ const Analytics = () => {
   // Calculate Y-axis max values for each chart
   const serviceYMax = useMemo(
     () => calculateYAxisMax(serviceData, "value"),
-    [serviceData]
+    [serviceData],
   );
   const workerYMax = useMemo(
     () => calculateYAxisMax(workerData, "value"),
-    [workerData]
+    [workerData],
   );
   const bookingYMax = useMemo(
     () => calculateYAxisMax(bookingTrendsFormatted, "confirmed"),
-    [bookingTrendsFormatted]
+    [bookingTrendsFormatted],
   );
 
   // Generate ticks for each chart
   const serviceTicks = useMemo(
     () => generateYAxisTicks(serviceYMax),
-    [serviceYMax]
+    [serviceYMax],
   );
   const workerTicks = useMemo(
     () => generateYAxisTicks(workerYMax),
-    [workerYMax]
+    [workerYMax],
   );
   const bookingTicks = useMemo(
     () => generateYAxisTicks(bookingYMax),
-    [bookingYMax]
+    [bookingYMax],
   );
 
   const extraFilters = (
@@ -184,42 +186,55 @@ const Analytics = () => {
       label: "Service Popularity",
       children: (
         <div className="bg-white shadow-sm rounded-xl p-4 md:p-6 w-full mt-3">
-          <div className="overflow-x-auto" style={{ width: "100%" }}>
-            <div style={{ minWidth: computeChartMinWidth(serviceData.length) }}>
-              <ResponsiveContainer width="100%" height={420}>
-                <BarChart
-                  data={serviceData}
-                  margin={{ top: 10, right: 30, left: 0, bottom: 70 }}
-                  barCategoryGap="15%"
-                  barGap={10}
-                >
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f3d2db" />
-                  <XAxis
-                    dataKey="serviceName"
-                    stroke="#555"
-                    interval={0}
-                    height={80}
-                    tick={<RotatedXAxisTick />}
-                  />
-                  <YAxis
-                    ticks={serviceTicks}
-                    domain={[0, serviceYMax]}
-                    tick={{ fill: "#666", fontSize: 12 }}
-                    axisLine={false}
-                    tickLine={false}
-                    tickFormatter={(val) => (val === serviceYMax ? "Ꝏ" : val)}
-                  />
-                  <Tooltip />
-                  <Bar
-                    dataKey="value"
-                    fill="#e91e63"
-                    barSize={40}
-                    radius={[6, 6, 0, 0]}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
+          {serviceData.length === 0 ? (
+            <div className="flex items-center justify-center h-40 text-gray-400 text-sm">
+              No data available for this period
             </div>
-          </div>
+          ) : (
+            <div style={{ width: "100%", overflowX: "auto" }}>
+              <BarChart
+                width={Math.max(serviceData.length * 130 + 100, 600)} // ← fixed pixel width, no ResponsiveContainer
+                height={420}
+                data={serviceData}
+                margin={{ top: 10, right: 300, left: 0, bottom: 90 }}
+                barCategoryGap="10%"
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="#f3d2db" />
+                <XAxis
+                  dataKey="serviceName"
+                  stroke="#555"
+                  interval={0}
+                  height={80}
+                  tick={<RotatedXAxisTick />}
+                />
+                <YAxis
+                  ticks={serviceTicks}
+                  domain={[0, serviceYMax]}
+                  tick={{ fill: "#666", fontSize: 12 }}
+                  axisLine={false}
+                  tickLine={false}
+                  width={35}
+                  tickFormatter={(val) => (val === serviceYMax ? "∞" : val)}
+                />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: "#fff",
+                    borderRadius: "8px",
+                    border: "1px solid #f3d1dc",
+                    fontSize: 13,
+                  }}
+                  formatter={(value) => [value, "Bookings"]}
+                  labelFormatter={(label) => `Service: ${label}`}
+                />
+                <Bar
+                  dataKey="value"
+                  fill="#e91e63"
+                  barSize={50}
+                  radius={[6, 6, 0, 0]}
+                />
+              </BarChart>
+            </div>
+          )}
         </div>
       ),
     },
@@ -330,7 +345,7 @@ const Analytics = () => {
   ];
 
   return (
-    <div className="p-4 md:p-6 min-h-screen overflow-x-auto md:w-[420px] lg:w-[680px] xl:w-full">
+    <div className="p-4 md:p-6 min-h-screen w-full">
       <h1 className="text-xl font-semibold text-gray-800 mb-4">Analytics</h1>
 
       <div className="bg-white rounded-lg p-3 md:p-4 shadow-sm">

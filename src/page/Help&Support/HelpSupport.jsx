@@ -1,4 +1,3 @@
-import React from "react";
 import {
   MailOutlined,
   UserOutlined,
@@ -10,7 +9,6 @@ import {
   useDeleteContactUsMutation,
   useGetAllMessagesQuery,
 } from "../../redux/features/help-and-support/message";
-import { ScaleLoader } from "react-spinners";
 
 const HelpSupport = () => {
   const { data, isLoading } = useGetAllMessagesQuery();
@@ -44,9 +42,11 @@ const HelpSupport = () => {
     {
       title: "Name",
       key: "name",
+      width: 120,
+      ellipsis: true,
       render: (_, msg) => (
-        <div className="flex items-center gap-2">
-          <UserOutlined className="text-[#e91e63]" />
+        <div className="flex items-center gap-1.5">
+          <UserOutlined className="text-[#e91e63] shrink-0" />
           <span>{msg.firstName}</span>
         </div>
       ),
@@ -54,49 +54,64 @@ const HelpSupport = () => {
     {
       title: "Email",
       key: "email",
+      width: 180,
+      ellipsis: true,
       render: (_, msg) => (
         <a
           href={`https://mail.google.com/mail/?view=cm&fs=1&to=${msg.email}`}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-2 text-[#e91e63] hover:underline"
+          className="flex items-center gap-1.5 text-[#e91e63] hover:underline"
         >
-          <MailOutlined /> {msg.email}
+          <MailOutlined className="shrink-0" />
+          <span>{msg.email}</span>
         </a>
       ),
     },
     {
       title: "Subject",
       key: "subject",
+      width: 130,
+      ellipsis: true,
       render: (_, msg) => <span>{msg.subject || "this is subject"}</span>,
     },
     {
       title: "Message",
       key: "message",
+      // ✅ No fixed width — this is the only flexible column.
+      // Ant Design will give it all remaining space after fixed columns are placed.
+      ellipsis: true,
       render: (_, msg) => (
-        <div className="flex items-start gap-2">
-          <MessageOutlined className="text-gray-400 mt-[2px]" />
-          <p className="text-gray-600 truncate max-w-[280px]">{msg.message}</p>
+        <div className="flex items-center gap-1.5">
+          <MessageOutlined className="text-gray-400 shrink-0" />
+          <span className="text-gray-600">{msg.message}</span>
         </div>
       ),
     },
     {
       title: "Date",
       key: "date",
+      width: 100,
       render: (_, msg) => (
-        <span className="text-gray-500">{formatDate(msg.createdAt)}</span>
+        <span className="text-gray-500 whitespace-nowrap">
+          {formatDate(msg.createdAt)}
+        </span>
       ),
     },
     {
       title: "Time",
       key: "time",
+      width: 80,
       render: (_, msg) => (
-        <span className="text-gray-500">{formattedTime(msg.createdAt)}</span>
+        <span className="text-gray-500 whitespace-nowrap">
+          {formattedTime(msg.createdAt)}
+        </span>
       ),
     },
     {
       title: "Action",
       key: "action",
+      width: 70,
       align: "center",
       render: (_, msg) => (
         <Popconfirm
@@ -121,19 +136,23 @@ const HelpSupport = () => {
     },
   ];
 
+  // Fixed columns total: 120+180+130+100+80+70 = 680px
+  // Message column gets whatever remains — works at any viewport width
+
   return (
-    <div className="p-6 overflow-x-auto md:w-[420px] lg:w-[680px] xl:w-full">
+    <div className="p-4 sm:p-6 w-full min-w-0 overflow-hidden">
       <h1 className="text-xl font-semibold text-gray-800 mb-4">
         Help & Support Messages
       </h1>
 
-      <div className="bg-white rounded-xl shadow-sm border border-pink-100 mt-4">
+      <div className="bg-white rounded-xl shadow-sm border border-pink-100 mt-4 w-full">
         <Table
           columns={columns}
           dataSource={contactMessages}
           rowKey="_id"
           loading={isLoading}
-          scroll={{ x: 900 }}
+          // ✅ Only triggers horizontal scroll on screens narrower than 680px
+          scroll={{ x: 680 }}
           pagination={false}
           rowClassName={(record) =>
             record?.isRead === true

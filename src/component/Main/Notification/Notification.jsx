@@ -316,7 +316,7 @@ const Notifications = () => {
   ];
 
   return (
-    <div className="min-h-screen p-6 overflow-x-auto md:w-[420px] lg:w-[680px] xl:w-full">
+    <div className="min-h-screen p-6 overflow-x-auto w-full">
       <h1 className="text-xl font-semibold text-gray-800 mb-5">
         Notifications
       </h1>

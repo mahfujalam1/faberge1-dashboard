@@ -31,7 +31,7 @@ const UserManagement = () => {
 
 
   return (
-    <div className="p-6 overflow-x-auto md:w-[420px] lg:w-[680px] xl:w-full">
+    <div className="p-6 overflow-x-auto w-full">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-xl font-semibold text-gray-800">User Management</h1>
       </div>

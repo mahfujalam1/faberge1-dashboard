@@ -2,7 +2,10 @@ import { useState, useEffect } from "react";
 import { Modal } from "antd";
 import { useUpdateServiceMutation } from "../../../redux/features/service/service";
 import { toast } from "sonner";
-import { getDurationOptions } from "../../../utils/duration";
+import {
+  getDurationOptions,
+  isValidDuration,
+} from "../../../utils/duration";
 
 const UpdateServiceModal = ({ isOpen, service, onClose }) => {
   const [formData, setFormData] = useState({
@@ -78,7 +81,7 @@ const UpdateServiceModal = ({ isOpen, service, onClose }) => {
 
     try {
       const duration = Number(formData.serviceDuration);
-      if (!duration || duration < 30 || duration > 480 || duration % 30 !== 0) {
+      if (!isValidDuration(duration)) {
         toast.error("Please select a valid service duration");
         return;
       }
@@ -187,7 +190,7 @@ const UpdateServiceModal = ({ isOpen, service, onClose }) => {
             ))}
           </select>
           <p className="text-xs text-gray-500 mt-1">
-            30-minute increments, 30 minutes up to 8 hours.
+            15-minute increments, 15 minutes up to 8 hours.
           </p>
         </div>
 

@@ -1,8 +1,8 @@
-// Service duration helpers. Durations are stored as minutes (30-minute increments, 30..480).
+// Service duration helpers. Durations are stored as minutes (15-minute increments, 15..480).
 
-export const DURATION_MIN = 30;
+export const DURATION_MIN = 15;
 export const DURATION_MAX = 480;
-export const DURATION_STEP = 30;
+export const DURATION_STEP = 15;
 
 export const formatDuration = (minutes) => {
   const m = Number(minutes);
@@ -21,4 +21,14 @@ export const getDurationOptions = () => {
     opts.push({ value: m, label: formatDuration(m) });
   }
   return opts;
+};
+
+export const isValidDuration = (minutes) => {
+  const m = Number(minutes);
+  return (
+    Number.isFinite(m) &&
+    m >= DURATION_MIN &&
+    m <= DURATION_MAX &&
+    m % DURATION_STEP === 0
+  );
 };

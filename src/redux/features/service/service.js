@@ -15,7 +15,9 @@ const serviceApi = baseApi.injectEndpoints({
     }),
 
     getAllServices: builder.query({
-      query: ({ page, limit, sortBy }) => ({
+      // Callers pass {} and expect every service; the backend defaults to 10
+      // per page, which hid older services from the admin and worker forms.
+      query: ({ page = 1, limit = 1000, sortBy = "desc" } = {}) => ({
         url: `service/get-all-services?page=${page}&limit=${limit}&sortOrder=${sortBy}`,
         method: "GET",
       }),

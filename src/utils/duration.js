@@ -12,7 +12,7 @@ export const formatDuration = (minutes) => {
   const rest = m % 60;
   const hPart = `${hours} ${hours === 1 ? "hr" : "hrs"}`;
   if (rest === 0) return hPart;
-  return `${hPart} ${rest} mnts`;
+  return `${hPart} ${rest} min`;
 };
 
 export const getDurationOptions = () => {
